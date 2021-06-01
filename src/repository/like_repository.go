@@ -4,13 +4,16 @@ import (
 	"context"
 	"github.com/gocql/gocql"
 	"post-service/domain"
-	)
+)
 
 const (
 	CreateLikeTable = "CREATE TABLE if not exists post_keyspace.Likes (post_id text, timestamp timestamp, profile_id text, " +
 		"PRIMARY KEY (post_id, profile_id));"
 	CreateDislikeTable = "CREATE TABLE if not exists post_keyspace.Dislikes (post_id text, timestamp timestamp, profile_id text, " +
 		"PRIMARY KEY (post_id, profile_id));"
+	InsertLikeStatement = "INSERT INTO post_keyspace.Likes (post_id, timestamp, profile_id) VALUES (?, ?, ?) IF NOT EXISTS;"
+	InsertDislikeStatement  = "INSERT INTO post_keyspace.Dislikes (post_id, timestamp, profile_id) VALUES (?, ?, ?) IF NOT EXISTS;"
+	SelectByPostId = "SELECT * FROM post_keyspace.Likes WHERE post_id = ?;"
 )
 
 type LikeRepo interface {
@@ -72,5 +75,6 @@ func NewLikeRepository(cassandraSession *gocql.Session) LikeRepo {
 	if err != nil {
 		return nil
 	}
+
 	return l
 }

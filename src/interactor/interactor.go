@@ -3,6 +3,7 @@ package interactor
 import (
 	"github.com/gocql/gocql"
 	"post-service/http/handler"
+	"post-service/infrastructure/data_seeder"
 	"post-service/repository"
 	"post-service/usecase"
 )
@@ -98,6 +99,9 @@ func (i interactor) NewAppHandler() handler.AppHandler {
 	appHandler.CommentHandler = i.NewCommentHandler()
 	appHandler.CollectionHandler = i.NewCollectionHandler()
 	appHandler.FavoriteHandler = i.NewFavoriteHandler()
+
+	data_seeder.SeedData(i.cassandraSession)
+
 	return appHandler
 }
 

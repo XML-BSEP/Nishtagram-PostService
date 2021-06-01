@@ -8,6 +8,7 @@ import (
 const (
 	CreateCollectionTable = "CREATE TABLE if not exists post_keyspace.Collections (id text, profile_id text, name text, time_of_creation timestamp, posts list<text>, " +
 		"PRIMARY KEY (profile_id, name));"
+	InsertCollectionStatement = "INSERT INTO post_keyspace.Collections (id, profile_id, name, time_of_creation, posts) VALUES (?, ?, ?, ?, ?) IF NOT EXISTS;"
 )
 
 type CollectionRepo interface {

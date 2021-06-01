@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	CreateReportTable = "CREATE TABLE if not exists post_keyspace.Reports (id text, post_id text, timestamp timestamp, num_of_likes int, report_by text, type text, status text, " +
+	CreateReportTable = "CREATE TABLE if not exists post_keyspace.Reports (id text, post_id text, timestamp timestamp, report_by text, type text, status text, " +
 		"PRIMARY KEY (id, status));"
+	InsertReportStatement = "INSERT INTO post_keyspace.Reports (id, post_id, timestamp, report_by, type, status) VALUES (?, ?, ?, ?, ?, ?) IF NOT EXISTS;"
 )
 
 type ReportRepo interface {

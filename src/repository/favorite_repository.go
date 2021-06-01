@@ -8,6 +8,7 @@ import (
 const (
 	CreateFavoritesTable = "CREATE TABLE if not exists post_keyspace.Favorites (profile_id text, time_of_creation timestamp, posts list<text>, " +
 		"PRIMARY KEY (profile_id));"
+	InsertFavoriteStatement = "INSERT INTO post_keyspace.Favorites (profile_id, time_of_creation, posts) VALUES (?, ?, ?) IF NOT EXISTS;"
 )
 
 type FavoritesRepo interface {
