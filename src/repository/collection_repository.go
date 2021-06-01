@@ -1,31 +1,34 @@
 package repository
 
-import "github.com/gocql/gocql"
+import (
+	"context"
+	"github.com/gocql/gocql"
+)
 
 const (
-	CreateCollectionTable = "CREATE TABLE if not exists post_service.Collections (profile_id, name, time_of_creation, posts list<int>, " +
+	CreateCollectionTable = "CREATE TABLE if not exists post_keyspace.Collections (id text, profile_id text, name text, time_of_creation timestamp, posts list<text>, " +
 		"PRIMARY KEY (profile_id, name));"
 )
 
 type CollectionRepo interface {
-	CreateCollection(userId uint, collectionName string) error
-	AddPostToCollection(userId uint, collectionName string, postId uint) error
-	RemovePostFromCollection(userId uint, collectionName string, postId uint) error
+	CreateCollection(userId string, collectionName string, ctx context.Context) error
+	AddPostToCollection(userId string, collectionName string, postId string, ctx context.Context) error
+	RemovePostFromCollection(userId string, collectionName string, postId string, ctx context.Context) error
 }
 
 type collectionRepository struct {
 	cassandraSession *gocql.Session
 }
 
-func (c collectionRepository) CreateCollection(userId uint, collectionName string) error {
+func (c collectionRepository) CreateCollection(userId string, collectionName string, ctx context.Context) error {
 	panic("implement me")
 }
 
-func (c collectionRepository) AddPostToCollection(userId uint, collectionName string, postId uint) error {
+func (c collectionRepository) AddPostToCollection(userId string, collectionName string, postId string, ctx context.Context) error {
 	panic("implement me")
 }
 
-func (c collectionRepository) RemovePostFromCollection(userId uint, collectionName string, postId uint) error {
+func (c collectionRepository) RemovePostFromCollection(userId string, collectionName string, postId string, ctx context.Context) error {
 	panic("implement me")
 }
 
@@ -33,6 +36,9 @@ func NewCollectionRepository(cassandraSession *gocql.Session) CollectionRepo {
 	var c = &collectionRepository{
 		cassandraSession: cassandraSession,
 	}
-	c.cassandraSession.Query(CreateCollectionTable).Exec()
+	err := c.cassandraSession.Query(CreateCollectionTable).Exec()
+	if err != nil {
+		return nil
+	}
 	return c
 }

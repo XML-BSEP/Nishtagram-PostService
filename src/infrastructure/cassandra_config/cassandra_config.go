@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/viper"
 	"log"
 	"strconv"
+	"time"
 )
 
 func init_viper() {
@@ -23,12 +24,14 @@ const (
 
 func NewCassandraSession() (*gocql.Session, error) {
 	init_viper()
-	domain := viper.GetString(`server.domain`)
+	domain := viper.GetString(`server.domain`) + ":" + viper.GetString(`server.port`)
 	fmt.Println(domain)
-	cluster := gocql.NewCluster(viper.GetString(`server.domain`))
-	cluster.Port, _ = strconv.Atoi(viper.GetString(`server.port`))
+	cluster := gocql.NewCluster(viper.GetString(`server.domain`) + ":" + viper.GetString(`server.port`))
 	cluster.ProtoVersion, _ = strconv.Atoi(viper.GetString(`proto_version`))
-
+	cluster.Consistency = gocql.LocalQuorum
+	cluster.Timeout = time.Second * 1000
+	//cluster.Keyspace = "post_keyspace"
+	cluster.Authenticator = gocql.PasswordAuthenticator{Username: "cassandra", Password: "cassandra"}
 	cluster.DisableInitialHostLookup = true
 
 	session, err := cluster.CreateSession()

@@ -1,7 +1,7 @@
 package domain
 
 type Comment struct {
-	Id uint
+	Id string
 	Comment string
 	PostId uint
 	CommentBy Profile

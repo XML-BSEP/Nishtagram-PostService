@@ -3,7 +3,7 @@ package domain
 import "time"
 
 type Post struct {
-	Id uint
+	Id string
 	Description string
 	Timestamp time.Time
 	NumOfLikes int

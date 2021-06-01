@@ -3,7 +3,7 @@ package domain
 import "time"
 
 type Collection struct {
-	Id uint
+	Id string
 	Name string
 	Timestamp time.Time
 	Profile Profile

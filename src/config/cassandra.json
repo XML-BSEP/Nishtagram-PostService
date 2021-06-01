@@ -1,9 +1,8 @@
 {
   "production" : false,
   "server" : {
-    "domain": "cassandra_post",
-    "port": 9042
+    "domain": "127.0.0.1",
+    "port": 7000
   },
-  "keyspace" : "post_cluster",
   "proto_version" : 4
 }

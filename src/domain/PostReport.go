@@ -3,8 +3,8 @@ package domain
 import "time"
 
 type PostReport struct {
-	Id uint
-	PostId uint
+	Id string
+	PostId string
 	Timestamp time.Time
 	ReportBy Profile
 	ReportType MediaReportType
