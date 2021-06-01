@@ -1,24 +1,25 @@
 package usecase
 
 import (
+	"context"
 	"post-service/dto"
 	"post-service/repository"
 )
 
 type FavoriteUseCase interface {
-	AddPostToFavorites(favoriteDTO dto.FavoriteDTO) error
-	RemovePostFromFavorites(favoriteDTO dto.FavoriteDTO) error
+	AddPostToFavorites(favoriteDTO dto.FavoriteDTO, ctx context.Context) error
+	RemovePostFromFavorites(favoriteDTO dto.FavoriteDTO, ctx context.Context) error
 }
 
 type favoriteUseCase struct {
 	favoriteRepository repository.FavoritesRepo
 }
 
-func (f favoriteUseCase) AddPostToFavorites(favoriteDTO dto.FavoriteDTO) error {
+func (f favoriteUseCase) AddPostToFavorites(favoriteDTO dto.FavoriteDTO, ctx context.Context) error {
 	panic("implement me")
 }
 
-func (f favoriteUseCase) RemovePostFromFavorites(favoriteDTO dto.FavoriteDTO) error {
+func (f favoriteUseCase) RemovePostFromFavorites(favoriteDTO dto.FavoriteDTO, ctx context.Context) error {
 	panic("implement me")
 }
 
