@@ -9,12 +9,12 @@ import (
 
 type LikeUseCase interface {
 	LikePost(dto dto.LikeDTO, ctx context.Context) error
-	DislikePost(postId uint, profile *domain.Profile, ctx context.Context) error
-	RemoveDislike(postId uint, profile *domain.Profile, ctx context.Context) error
-	GetLikesForPost(postId uint, ctx context.Context) ([]domain.Like, error)
-	GetDislikesForPost(postId uint, ctx context.Context) ([]domain.Dislike, error)
-	GetNumOfLikesForPost(postId uint, ctx context.Context) (uint64, error)
-	GetNumOfDislikesForPost(postId uint, ctx context.Context) (uint64, error)
+	DislikePost(postId string, profile *domain.Profile, ctx context.Context) error
+	RemoveDislike(postId string, profile *domain.Profile, ctx context.Context) error
+	GetLikesForPost(postId string, ctx context.Context) ([]domain.Like, error)
+	GetDislikesForPost(postId string, ctx context.Context) ([]domain.Dislike, error)
+	GetNumOfLikesForPost(postId string, ctx context.Context) (uint64, error)
+	GetNumOfDislikesForPost(postId string, ctx context.Context) (uint64, error)
 }
 
 type likeUseCase struct {
@@ -25,27 +25,27 @@ func (l likeUseCase) LikePost(dto dto.LikeDTO, ctx context.Context) error {
 	panic("implement me")
 }
 
-func (l likeUseCase) DislikePost(postId uint, profile *domain.Profile, ctx context.Context) error {
+func (l likeUseCase) DislikePost(postId string, profile *domain.Profile, ctx context.Context) error {
 	panic("implement me")
 }
 
-func (l likeUseCase) RemoveDislike(postId uint, profile *domain.Profile, ctx context.Context) error {
+func (l likeUseCase) RemoveDislike(postId string, profile *domain.Profile, ctx context.Context) error {
 	panic("implement me")
 }
 
-func (l likeUseCase) GetLikesForPost(postId uint, ctx context.Context) ([]domain.Like, error) {
+func (l likeUseCase) GetLikesForPost(postId string, ctx context.Context) ([]domain.Like, error) {
 	panic("implement me")
 }
 
-func (l likeUseCase) GetDislikesForPost(postId uint, ctx context.Context) ([]domain.Dislike, error) {
+func (l likeUseCase) GetDislikesForPost(postId string, ctx context.Context) ([]domain.Dislike, error) {
 	panic("implement me")
 }
 
-func (l likeUseCase) GetNumOfLikesForPost(postId uint, ctx context.Context) (uint64, error) {
+func (l likeUseCase) GetNumOfLikesForPost(postId string, ctx context.Context) (uint64, error) {
 	panic("implement me")
 }
 
-func (l likeUseCase) GetNumOfDislikesForPost(postId uint, ctx context.Context) (uint64, error) {
+func (l likeUseCase) GetNumOfDislikesForPost(postId string, ctx context.Context) (uint64, error) {
 	panic("implement me")
 }
 
