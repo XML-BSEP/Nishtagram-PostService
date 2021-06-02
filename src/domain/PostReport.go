@@ -7,6 +7,7 @@ type PostReport struct {
 	PostId string
 	Timestamp time.Time
 	ReportBy Profile
+	ReportedPostBy Profile
 	ReportType MediaReportType
 	ReportStatus ReportStatus
 }

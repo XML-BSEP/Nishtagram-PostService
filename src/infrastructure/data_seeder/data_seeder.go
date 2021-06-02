@@ -20,8 +20,8 @@ func SeedData(cassandraSession *gocql.Session) {
 const (
 	CreateReportTypesTable = "CREATE TABLE IF NOT EXISTS post_keyspace.ReportType (name text, PRIMARY KEY (name));"
 	CreateReportStatusTable = "CREATE TABLE IF NOT EXISTS post_keyspace.ReportStatus (name text, PRIMARY KEY (name));"
-	InsertIntoReportTypes = "INSERT INTO post_keyspace.ReportType (name) VALUES (?);"
-	InsertIntoReportStatus = "INSERT INTO post_keyspace.ReportStatus (name) VALUES (?);"
+	InsertIntoReportTypes = "INSERT INTO post_keyspace.ReportType (name) VALUES (?) IF NOT EXISTS;"
+	InsertIntoReportStatus = "INSERT INTO post_keyspace.ReportStatus (name) VALUES (?) IF NOT EXISTS;"
 )
 
 func SeedAllReportStatus(session *gocql.Session) {
@@ -65,7 +65,7 @@ func SeedAllReportType(session *gocql.Session) {
 
 func SeedReports(session *gocql.Session) {
 	err := session.Query(repository.InsertReportStatement, "9331c882-f72c-427b-bdfc-3918d90dc364", "4752f49f-3011-44af-9c62-2a6f4086233d", time.Now(),
-		"424935b1-766c-4f99-b306-9263731518bc", "NUDITY", "CREATED").Exec()
+		"424935b1-766c-4f99-b306-9263731518bc", "e2b5f92e-c31b-11eb-8529-0242ac130003", "NUDITY", "CREATED").Exec()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -138,8 +138,9 @@ func SeedPosts(session *gocql.Session) {
 
 	hashtags := [2]string{"tbt", "idegasnamax"}
 	media := [1]string{"assets/images/stefan_smeker.jpg"}
+	mentions := []string {""}
 	err := session.Query(repository.InsertIntoPostTable, "4752f49f-3011-44af-9c62-2a6f4086233d", "e2b5f92e-c31b-11eb-8529-0242ac130003",
-		"Da se podsetimo!", time.Now(), 0, 0, 0, false, "KI", 0.0, 0.0, hashtags, media, "IMAGE").Exec()
+		"Da se podsetimo!", time.Now(), 0, 0, 0, false, "KI", 0.0, 0.0, mentions, hashtags, media, "IMAGE", false).Exec()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -148,7 +149,7 @@ func SeedPosts(session *gocql.Session) {
 	media = [1]string{"assets/images/shone.jpg"}
 
 	err = session.Query(repository.InsertIntoPostTable, "d459e0f2-ab61-48e8-a593-29933ce99525", "424935b1-766c-4f99-b306-9263731518bc",
-		"Bitno da je nekad bilo lepo...", time.Now(), 0, 0, 0, false, "KI", 0.0, 0.0, hashtag2, media, "IMAGE").Exec()
+		"Bitno da je nekad bilo lepo...", time.Now(), 0, 0, 0, false, "KI", 0.0, 0.0, mentions, hashtag2, media, "IMAGE", false).Exec()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -157,7 +158,7 @@ func SeedPosts(session *gocql.Session) {
 	media = [1]string{"assets/images/pablo.jpg"}
 
 	err = session.Query(repository.InsertIntoPostTable, "1ea5b7bc-94eb-40c0-98fd-7858e197e3b2", "a2c2f993-dc32-4a82-82ed-a5f6866f7d03",
-		"Bitno da je nekad bilo lepo...", time.Now(), 0, 0, 0, false, "SM", 0.0, 0.0, hashtag2, media, "IMAGE").Exec()
+		"Bitno da je nekad bilo lepo...", time.Now(), 0, 0, 0, false, "SM", 0.0, 0.0, mentions, hashtag2, media, "IMAGE", false).Exec()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -166,7 +167,7 @@ func SeedPosts(session *gocql.Session) {
 	media = [1]string{"assets/images/pablo.jpg"}
 
 	err = session.Query(repository.InsertIntoPostTable, "adfee6f4-fe45-40ad-8f8e-760ec861a35e", "43420055-3174-4c2a-9823-a8f060d644c3",
-		"Bitno da je nekad bilo lepo...", time.Now(), 0, 0, 0, false, "NS", 0.0, 0.0, hashtag2, media, "IMAGE").Exec()
+		"Bitno da je nekad bilo lepo...", time.Now(), 0, 0, 0, false, "NS", 0.0, 0.0, mentions, hashtag2, media, "IMAGE", false).Exec()
 	if err != nil {
 		fmt.Println(err)
 	}

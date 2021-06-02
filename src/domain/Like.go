@@ -3,8 +3,15 @@ package domain
 import "time"
 
 type Like struct {
-	Id string
 	PostId string
 	Profile Profile
 	Timestamp time.Time
+}
+
+func NewLike(postId string, profileId string, timestamp time.Time) Like {
+	return Like{
+		PostId: postId,
+		Profile: Profile{Id: profileId},
+		Timestamp: timestamp,
+	}
 }

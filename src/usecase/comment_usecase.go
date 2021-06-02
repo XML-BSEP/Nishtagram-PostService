@@ -16,11 +16,11 @@ type commentUseCase struct {
 }
 
 func (c commentUseCase) AddComment(comment dto.CommentDTO, ctx context.Context) error {
-	panic("implement me")
+	return c.commentRepository.CommentPost(comment, context.Background())
 }
 
 func (c commentUseCase) DeleteComment(comment dto.CommentDTO, ctx context.Context) error {
-	panic("implement me")
+	return c.commentRepository.DeleteComment(comment, context.Background())
 }
 
 func NewCommentUseCase(commentRepository repository.CommentRepo) CommentUseCase {

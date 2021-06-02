@@ -16,11 +16,11 @@ type favoriteUseCase struct {
 }
 
 func (f favoriteUseCase) AddPostToFavorites(favoriteDTO dto.FavoriteDTO, ctx context.Context) error {
-	panic("implement me")
+	return f.favoriteRepository.AddPostToFavorites(favoriteDTO.PostId, favoriteDTO.UserId, favoriteDTO.PostBy, context.Background())
 }
 
 func (f favoriteUseCase) RemovePostFromFavorites(favoriteDTO dto.FavoriteDTO, ctx context.Context) error {
-	panic("implement me")
+	return f.favoriteRepository.RemovePostFromFavorites(favoriteDTO.PostId, favoriteDTO.UserId, context.Background())
 }
 
 func NewFavoriteUseCase(favoritesRepository repository.FavoritesRepo) FavoriteUseCase {

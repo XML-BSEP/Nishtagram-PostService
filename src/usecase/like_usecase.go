@@ -8,46 +8,42 @@ import (
 )
 
 type LikeUseCase interface {
-	LikePost(dto dto.LikeDTO, ctx context.Context) error
-	DislikePost(postId string, profile *domain.Profile, ctx context.Context) error
-	RemoveDislike(postId string, profile *domain.Profile, ctx context.Context) error
+	LikePost(dto dto.LikeDislikeDTO, ctx context.Context) error
+	DislikePost(dto dto.LikeDislikeDTO, ctx context.Context) error
+	RemoveLike(dto dto.LikeDislikeDTO, ctx context.Context) error
+	RemoveDislike(dto dto.LikeDislikeDTO, ctx context.Context) error
 	GetLikesForPost(postId string, ctx context.Context) ([]domain.Like, error)
 	GetDislikesForPost(postId string, ctx context.Context) ([]domain.Dislike, error)
-	GetNumOfLikesForPost(postId string, ctx context.Context) (uint64, error)
-	GetNumOfDislikesForPost(postId string, ctx context.Context) (uint64, error)
 }
 
 type likeUseCase struct {
 	likeRepository repository.LikeRepo
 }
 
-func (l likeUseCase) LikePost(dto dto.LikeDTO, ctx context.Context) error {
-	panic("implement me")
+func (l likeUseCase) RemoveLike(dto dto.LikeDislikeDTO, ctx context.Context) error {
+	return l.likeRepository.RemoveLike(dto.PostBy, dto.PostBy, domain.Profile{Id: dto.UserId}, context.Background())
 }
 
-func (l likeUseCase) DislikePost(postId string, profile *domain.Profile, ctx context.Context) error {
-	panic("implement me")
+func (l likeUseCase) LikePost(dto dto.LikeDislikeDTO, ctx context.Context) error {
+	return l.likeRepository.LikePost(dto.PostId, dto.PostBy, domain.Profile{Id: dto.UserId}, context.Background())
 }
 
-func (l likeUseCase) RemoveDislike(postId string, profile *domain.Profile, ctx context.Context) error {
-	panic("implement me")
+func (l likeUseCase) DislikePost(dto dto.LikeDislikeDTO, ctx context.Context) error {
+	return l.likeRepository.LikePost(dto.PostId, dto.PostBy, domain.Profile{Id: dto.UserId}, context.Background())
+}
+
+func (l likeUseCase) RemoveDislike(dto dto.LikeDislikeDTO, ctx context.Context) error {
+	return l.likeRepository.RemoveDislike(dto.PostBy, dto.PostBy, domain.Profile{Id: dto.UserId}, context.Background())
 }
 
 func (l likeUseCase) GetLikesForPost(postId string, ctx context.Context) ([]domain.Like, error) {
-	panic("implement me")
+	return l.likeRepository.GetLikesForPost(postId, context.Background())
 }
 
 func (l likeUseCase) GetDislikesForPost(postId string, ctx context.Context) ([]domain.Dislike, error) {
-	panic("implement me")
+	return l.likeRepository.GetDislikesForPost(postId, context.Background())
 }
 
-func (l likeUseCase) GetNumOfLikesForPost(postId string, ctx context.Context) (uint64, error) {
-	panic("implement me")
-}
-
-func (l likeUseCase) GetNumOfDislikesForPost(postId string, ctx context.Context) (uint64, error) {
-	panic("implement me")
-}
 
 func NewLikeUseCase(likeRepository repository.LikeRepo) LikeUseCase {
 	return &likeUseCase{likeRepository: likeRepository}

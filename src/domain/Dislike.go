@@ -3,8 +3,16 @@ package domain
 import "time"
 
 type Dislike struct {
-	Id string
-	PostId uint
+	PostId string
 	Profile Profile
 	Timestamp time.Time
 }
+
+func NewDislike(postId string, profileId string, timestamp time.Time) Dislike {
+	return Dislike{
+		PostId: postId,
+		Profile: Profile{Id: profileId},
+		Timestamp: timestamp,
+	}
+}
+

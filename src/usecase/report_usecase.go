@@ -2,41 +2,40 @@ package usecase
 
 import (
 	"context"
-	"post-service/domain"
 	"post-service/dto"
 	"post-service/repository"
 )
 
 type PostReportUseCase interface {
-	ReportPost(report *dto.ReportDTO, ctx context.Context) error
-	ReviewReport(report *dto.ReportDTO, ctx context.Context) error
-	GetAllPendingReports(ctx context.Context) ([]domain.PostReport, error)
-	GetAllApprovedReports(ctx context.Context) ([]domain.PostReport, error)
-	GetAllRejectedReports(ctx context.Context) ([]domain.PostReport, error)
+	ReportPost(report dto.CreateReportDTO, ctx context.Context) error
+	ReviewReport(report dto.ReviewReportDTO, ctx context.Context) error
+	GetAllPendingReports(ctx context.Context) ([]dto.ReportDTO, error)
+	GetAllApprovedReports(ctx context.Context) ([]dto.ReportDTO, error)
+	GetAllRejectedReports(ctx context.Context) ([]dto.ReportDTO, error)
 }
 
 type postReportUseCase struct {
 	postReportRepository repository.ReportRepo
 }
 
-func (p postReportUseCase) ReportPost(report *dto.ReportDTO, ctx context.Context) error {
-	panic("implement me")
+func (p postReportUseCase) ReportPost(report dto.CreateReportDTO, ctx context.Context) error {
+	return p.postReportRepository.ReportPost(report, context.Background())
 }
 
-func (p postReportUseCase) ReviewReport(report *dto.ReportDTO, ctx context.Context) error {
-	panic("implement me")
+func (p postReportUseCase) ReviewReport(report dto.ReviewReportDTO, ctx context.Context) error {
+	return p.postReportRepository.ReviewReport(report, context.Background())
 }
 
-func (p postReportUseCase) GetAllPendingReports(ctx context.Context) ([]domain.PostReport, error) {
-	panic("implement me")
+func (p postReportUseCase) GetAllPendingReports(ctx context.Context) ([]dto.ReportDTO, error) {
+	return p.postReportRepository.GetAllPendingReports(context.Background())
 }
 
-func (p postReportUseCase) GetAllApprovedReports(ctx context.Context) ([]domain.PostReport, error) {
-	panic("implement me")
+func (p postReportUseCase) GetAllApprovedReports(ctx context.Context) ([]dto.ReportDTO, error) {
+	return p.postReportRepository.GetAllApprovedReports(context.Background())
 }
 
-func (p postReportUseCase) GetAllRejectedReports(ctx context.Context) ([]domain.PostReport, error) {
-	panic("implement me")
+func (p postReportUseCase) GetAllRejectedReports(ctx context.Context) ([]dto.ReportDTO, error) {
+	return p.postReportRepository.GetAllRejectedReports(context.Background())
 }
 
 func NewPostReportUseCase(postReportRepository repository.ReportRepo) PostReportUseCase {
