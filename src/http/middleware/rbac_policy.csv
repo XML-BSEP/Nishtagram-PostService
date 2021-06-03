@@ -1,0 +1,29 @@
+p, ADMIN, /post/reviewReport, *
+p, ADMIN, /post/getPendingReports, *
+p, ADMIN, /post/getApprovedReports, *
+p, ADMIN, /post/getRejectedReports, *
+p, USER, /post/createPost, *
+p, USER, /post/createCollection, *
+p, USER, /post/createReport, *
+p, USER, /post/likePost, *
+p, USER, /post/dislikePost, *
+p, USER, /post/removeLike, *
+p, USER, /post/removeDislike, *
+p, USER, /post/comment, *
+p, USER, /post/removeComment, *
+p, USER, /post/addToCollection, *
+p, USER, /post/removeFromCollection, *
+p, USER, /post/addFavorite, *
+p, USER, /post/removeFavorite, *
+p, USER, /post/deleteCollection, *
+p, USER, /post/editPost, *
+p, USER, /post/deletePost, *
+p, USER, /post/getPostsByUser, *
+p, USER, /post/getPost, *
+p, ANONYMOUS, /post/getPostsByUser, *
+p, ANONYMOUS, /post/getPost, *
+
+
+
+
+

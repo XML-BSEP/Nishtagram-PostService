@@ -13,7 +13,7 @@ const (
  	CreatePostTable = "CREATE TABLE if not exists post_keyspace.Posts (id text, profile_id text, description text, timestamp timestamp, num_of_likes int, num_of_dislikes int, num_of_comments int, banned boolean, location_name text, location_lat double," +
  		"location_long double, mentions list<text>, hashtags list<text>, media list<text>, type text, deleted boolean, PRIMARY KEY (profile_id, id));"
  	InsertIntoPostTable = "INSERT INTO post_keyspace.Posts (id, profile_id, description, timestamp, num_of_likes, " +
- 		"num_of_dislikes, num_of_comments, banned, location_name, location_lat, location_long, mentions, hashtags, media, type, deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) IF NOT EXISTS;"
+ 		"num_of_dislikes, num_of_comments, banned, location_name, location_lat, location_long, mentions, hashtags, media, type, deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) IF NOT EXISTS;"
 	AddLikeToPost = "UPDATE post_keyspace.Posts SET num_of_likes = ? WHERE id = ? and profile_id = ?;"
 	AddDislikeToPost = "UPDATE post_keyspace.Posts SET num_of_dislikes = ? WHERE id = ? and profile_id = ?;"
 	AddCommentToPost = "UPDATE post_keyspace.Posts SET num_of_comments = ?  WHERE id = ? and profile_id = ?;"
@@ -30,20 +30,28 @@ const (
 		"hashtags, media, type, deleted  FROM post_keyspace.Posts where profile_id = ? and id = ?;"
 	UpdatePost = "UPDATE post_keyspace.Posts SET description = ?, mentions = ?, hashtags = ?, location_name = ?, location_lat = ?, location_long = ? WHERE profile_id = ? and id = ?;"
 	DeletePost = "UPDATE post_keyspace.Posts SET deleted = true WHERE profile_id = ? AND id = ?;"
+	IfDeletedOrBanned = "SELECT banned, deleted FROM post_keyspace.Posts WHERE profile_id = ? AND id = ?;"
 	)
 type PostRepo interface {
 	CreatePost(req dto.CreatePostDTO, ctx context.Context) error
 	EditPost(req dto.UpdatePostDTO, ctx context.Context) error
 	DeletePost(req dto.DeletePostDTO, ctx context.Context) error
 	GetPostsByUserId(userId string, ctx context.Context) ([]dto.PostDTO, error)
-	GetPostsById(userId string, postId string) (dto.PostDTO, error)
+	GetPostsById(userId string, postId string, ctx context.Context) (dto.PostDTO, error)
+	SeeIfPostDeletedOrBanned(userId string, postId string, ctx context.Context) bool
 }
 
 type postRepository struct {
 	cassandraSession *gocql.Session
 }
 
-func (p postRepository) GetPostsById(userId string, postId string) (dto.PostDTO, error) {
+func (p postRepository) SeeIfPostDeletedOrBanned(postId string, userId string, ctx context.Context) bool {
+	var banned, deleted bool
+	p.cassandraSession.Query(IfDeletedOrBanned, userId, postId).Iter().Scan(&banned, &deleted)
+	return banned || deleted
+}
+
+func (p postRepository) GetPostsById(userId string, postId string, ctx context.Context) (dto.PostDTO, error) {
 	var id, profileId, description, location, postType string
 	var numOfLikes, numOfDislikes, numOfComments int
 	var banned, deleted bool
@@ -97,13 +105,10 @@ func (p postRepository) GetPostsByUserId(userId string, ctx context.Context) ([]
 
 
 func (p postRepository) CreatePost(req dto.CreatePostDTO, ctx context.Context) error {
-	postId, err := uuid.NewUUID()
+	postId := uuid.NewString()
 
-	if err != nil {
-		return err
-	}
 	currentTime := time.Now()
-	err = p.cassandraSession.Query(InsertIntoPostTable, postId, req.UserId, req.Description, currentTime, 0, 0, 0, false, req.Location.Location,
+	err := p.cassandraSession.Query(InsertIntoPostTable, postId, req.UserId, req.Description, currentTime, 0, 0, 0, false, req.Location.Location,
 		req.Location.Latitude, req.Location.Longitude, req.Mentions, req.Hashtags, req.Media, req.MediaType, false).Exec()
 
 	if err != nil {
@@ -114,7 +119,7 @@ func (p postRepository) CreatePost(req dto.CreatePostDTO, ctx context.Context) e
 
 func (p postRepository) EditPost(req dto.UpdatePostDTO, ctx context.Context) error {
 	err := p.cassandraSession.Query(UpdatePost, req.Description, req.Mentions, req.Hashtags,
-		req.Location.Location, req.Location.Latitude, req.Location.Longitude).Exec()
+		req.Location.Location, req.Location.Latitude, req.Location.Longitude, req.UserId, req.PostId).Exec()
 
 	if err != nil {
 		return fmt.Errorf("error while updating post")

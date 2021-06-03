@@ -17,10 +17,23 @@ const (
 type FavoritesRepo interface {
 	AddPostToFavorites(postId string, profileId string, postBy string, ctx context.Context) error
 	RemovePostFromFavorites(postId string, profileId string, ctx context.Context) error
+	GetFavorites(userId string) (map[string]string, error)
 }
 
 type favoritesRepository struct {
 	cassandraSession *gocql.Session
+}
+
+func (f favoritesRepository) GetFavorites(userId string) (map[string]string, error) {
+	var posts map[string]string
+	iter := f.cassandraSession.Query(GetFavoritesForUser, userId).Iter()
+	if iter == nil {
+		return nil, fmt.Errorf("no such element")
+	}
+
+	iter.Scan(&posts)
+
+	return  posts, nil
 }
 
 func (f favoritesRepository) AddPostToFavorites(postId string, profileId string, postBy string, ctx context.Context) error {

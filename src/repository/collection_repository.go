@@ -15,6 +15,7 @@ const (
 	GetCollection = "SELECT posts FROM post_keyspace.Collections WHERE profile_id = ? AND name = ?;"
 	UpdateCollection = "UPDATE post_keyspace.Collections SET posts = ? WHERE profile_id = ? AND name = ?;"
 	DeleteCollection = "DELETE FROM post_keyspace.Collections WHERE profile_id = ? AND name = ?;"
+	GetAllCollectionNames = "SELECT name FROM post_keyspace.Collections WHERE profile_id = ?;"
 	)
 
 type CollectionRepo interface {
@@ -22,10 +23,44 @@ type CollectionRepo interface {
 	AddPostToCollection(userId string, collectionName string, postId string, ctx context.Context) error
 	RemovePostFromCollection(userId string, collectionName string, postId string, ctx context.Context) error
 	DeleteCollection(userId string, collectionName string, ctx context.Context) error
+	GetCollection(userId string, collectionName string, ctx context.Context) ([]string, error)
+	GetAllCollectionNames(userId string, ctx context.Context) ([]string, error)
 }
 
 type collectionRepository struct {
 	cassandraSession *gocql.Session
+}
+
+func (c collectionRepository) GetAllCollectionNames(userId string, ctx context.Context) ([]string, error) {
+	iter := c.cassandraSession.Query(GetAllCollectionNames, userId).Iter()
+	if iter == nil {
+		return nil, fmt.Errorf("no collections")
+	}
+
+	var collections []string
+	scanner := iter.Scanner()
+	for scanner.Next() {
+		var name string
+		err := scanner.Scan(&name)
+		if err != nil {
+			continue
+		}
+		collections = append(collections, name)
+	}
+
+	return collections, nil
+}
+
+func (c collectionRepository) GetCollection(userId string, collectionName string, ctx context.Context) ([]string, error) {
+	var posts []string
+	iter := c.cassandraSession.Query(GetCollection, userId, collectionName).Iter()
+
+	if iter == nil {
+		return nil, fmt.Errorf("no such collection")
+	}
+
+	iter.Scan(&posts)
+	return posts, nil
 }
 
 func (c collectionRepository) DeleteCollection(userId string, collectionName string, ctx context.Context) error {

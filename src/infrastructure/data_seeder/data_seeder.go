@@ -72,7 +72,12 @@ func SeedReports(session *gocql.Session) {
 }
 
 func SeedFavorites(session *gocql.Session) {
-	media := [3]string{"4752f49f-3011-44af-9c62-2a6f4086233d", "d459e0f2-ab61-48e8-a593-29933ce99525", "adfee6f4-fe45-40ad-8f8e-760ec861a35e"}
+	media := make(map[string]string, 3)
+
+	media["4752f49f-3011-44af-9c62-2a6f4086233d"] = "e2b5f92e-c31b-11eb-8529-0242ac130003"
+	media["d459e0f2-ab61-48e8-a593-29933ce99525"] = "424935b1-766c-4f99-b306-9263731518bc"
+	media["adfee6f4-fe45-40ad-8f8e-760ec861a35e"] = "43420055-3174-4c2a-9823-a8f060d644c3"
+
 	err := session.Query(repository.InsertFavoriteStatement, "a2c2f993-dc32-4a82-82ed-a5f6866f7d03", time.Now(), media).Exec()
 	if err != nil {
 		fmt.Println(err)
@@ -102,7 +107,7 @@ func SeedLikes(session *gocql.Session) {
 		fmt.Println(id + profile_id + timestamp.String())
 	}
 
-	err = session.Query(repository.AddLikeToPost, 1, id, profile_id).Exec()
+	err = session.Query(repository.AddLikeToPost, 1, "4752f49f-3011-44af-9c62-2a6f4086233d", "e2b5f92e-c31b-11eb-8529-0242ac130003").Exec()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -112,7 +117,7 @@ func SeedLikes(session *gocql.Session) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	err = session.Query(repository.AddDislikeToPost, 1, id, profile_id).Exec()
+	err = session.Query(repository.AddDislikeToPost, 1, "4752f49f-3011-44af-9c62-2a6f4086233d", "e2b5f92e-c31b-11eb-8529-0242ac130003").Exec()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -127,7 +132,7 @@ func SeedLikes(session *gocql.Session) {
 		fmt.Println(err)
 	}
 
-	err = session.Query(repository.AddDislikeToPost, 1, id, profile_id).Exec()
+	err = session.Query(repository.AddDislikeToPost, 1, "d459e0f2-ab61-48e8-a593-29933ce99525", "424935b1-766c-4f99-b306-9263731518bc").Exec()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -139,6 +144,7 @@ func SeedPosts(session *gocql.Session) {
 	hashtags := [2]string{"tbt", "idegasnamax"}
 	media := [1]string{"assets/images/stefan_smeker.jpg"}
 	mentions := []string {""}
+
 	err := session.Query(repository.InsertIntoPostTable, "4752f49f-3011-44af-9c62-2a6f4086233d", "e2b5f92e-c31b-11eb-8529-0242ac130003",
 		"Da se podsetimo!", time.Now(), 0, 0, 0, false, "KI", 0.0, 0.0, mentions, hashtags, media, "IMAGE", false).Exec()
 	if err != nil {

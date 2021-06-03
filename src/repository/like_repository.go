@@ -18,6 +18,8 @@ const (
 	RemoveDislike = "DELETE FROM post_keyspace.Dislikes WHERE post_id = ? AND profile_id = ?;"
 	GetAllLikesPerPost = "SELECT post_id, profiles_id, timestamp FROM post_keyspace.Likes WHERE post_id = ?;"
 	GetAllDislikesPerPost = "SELECT post_id, profiles_id, timestamp FROM post_keyspace.Dislikes WHERE post_id = ?;"
+	SeeIfLikeExists = "SELECT count(*) FROM post_keyspace.Likes WHERE post_id = ? AND profile_id = ?;"
+	SeeIfDislikeExists = "SELECT count(*) FROM post_keyspace.Dislikes WHERE post_id = ? AND profile_id = ?;"
 )
 
 type LikeRepo interface {
@@ -27,10 +29,24 @@ type LikeRepo interface {
 	RemoveDislike(postId string, postBy string, profile domain.Profile, ctx context.Context) error
 	GetLikesForPost(postId string, ctx context.Context) ([]domain.Like, error)
 	GetDislikesForPost(postId string, ctx context.Context) ([]domain.Dislike, error)
+	SeeIfLikeExists(postId string, profileId string, ctx context.Context) bool
+	SeeIfDislikeExists(postId string, profileId string, ctx context.Context) bool
 }
 
 type likeRepository struct {
 	cassandraSession *gocql.Session
+}
+
+func (l likeRepository) SeeIfLikeExists(postId string, profileId string, ctx context.Context) bool {
+	ifExists := 0
+	l.cassandraSession.Query(SeeIfLikeExists, postId, profileId).Iter().Scan(&ifExists)
+	return ifExists > 0
+}
+
+func (l likeRepository) SeeIfDislikeExists(postId string, profileId string, ctx context.Context) bool {
+	ifExists := 0
+	l.cassandraSession.Query(SeeIfDislikeExists, postId, profileId).Iter().Scan(&ifExists)
+	return ifExists > 0
 }
 
 func (l likeRepository) GetLikesForPost(postId string, ctx context.Context) ([]domain.Like, error) {

@@ -1,7 +1,7 @@
 package domain
 
 type Location struct {
-	Location string
-	Longitude float64
-	Latitude float64
+	Location string `json:"location" validate:"required"`
+	Longitude float64 `json:"longitude" validate:"required"`
+	Latitude float64 `json:"latitude" validate:"required"`
 }
