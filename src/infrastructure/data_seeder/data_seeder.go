@@ -144,38 +144,75 @@ func SeedPosts(session *gocql.Session) {
 	hashtags := [2]string{"tbt", "idegasnamax"}
 	media := [1]string{"assets/images/stefan_smeker.jpg"}
 	mentions := []string {""}
+	timestamp := time.Now()
+	var ifExists int
+	session.Query(repository.SeeIfPostExists, "4752f49f-3011-44af-9c62-2a6f4086233d", "e2b5f92e-c31b-11eb-8529-0242ac130003").Iter().Scan(&ifExists)
 
+	if ifExists == 0 {
+		err := session.Query(repository.InsertIntoPostsTimestampTable, "4752f49f-3011-44af-9c62-2a6f4086233d", "e2b5f92e-c31b-11eb-8529-0242ac130003", timestamp).Exec()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
 	err := session.Query(repository.InsertIntoPostTable, "4752f49f-3011-44af-9c62-2a6f4086233d", "e2b5f92e-c31b-11eb-8529-0242ac130003",
-		"Da se podsetimo!", time.Now(), 0, 0, 0, false, "KI", 0.0, 0.0, mentions, hashtags, media, "IMAGE", false).Exec()
+		"Da se podsetimo!", timestamp, 0, 0, 0, false, "KI", 0.0, 0.0, mentions, hashtags, media, "IMAGE", false).Exec()
 	if err != nil {
 		fmt.Println(err)
 	}
+
+
 
 	hashtag2 := [1]string{"idegasnamax"}
 	media = [1]string{"assets/images/shone.jpg"}
 
+	timestamp = time.Now()
+	session.Query(repository.SeeIfPostExists, "d459e0f2-ab61-48e8-a593-29933ce99525", "424935b1-766c-4f99-b306-9263731518bc").Iter().Scan(&ifExists)
+
+	if ifExists == 0 {
+		err = session.Query(repository.InsertIntoPostsTimestampTable, "d459e0f2-ab61-48e8-a593-29933ce99525", "424935b1-766c-4f99-b306-9263731518bc", timestamp).Exec()
+	}
 	err = session.Query(repository.InsertIntoPostTable, "d459e0f2-ab61-48e8-a593-29933ce99525", "424935b1-766c-4f99-b306-9263731518bc",
-		"Bitno da je nekad bilo lepo...", time.Now(), 0, 0, 0, false, "KI", 0.0, 0.0, mentions, hashtag2, media, "IMAGE", false).Exec()
+		"Bitno da je nekad bilo lepo...", timestamp, 0, 0, 0, false, "KI", 0.0, 0.0, mentions, hashtag2, media, "IMAGE", false).Exec()
 	if err != nil {
 		fmt.Println(err)
 	}
 
+
+
+
 	hashtag2 = [1]string{"idegasnamax"}
 	media = [1]string{"assets/images/pablo.jpg"}
+	timestamp = time.Now()
+	session.Query(repository.SeeIfPostExists, "1ea5b7bc-94eb-40c0-98fd-7858e197e3b2", "a2c2f993-dc32-4a82-82ed-a5f6866f7d03").Iter().Scan(&ifExists)
 
+	if ifExists == 0 {
+		err = session.Query(repository.InsertIntoPostsTimestampTable, "1ea5b7bc-94eb-40c0-98fd-7858e197e3b2", "a2c2f993-dc32-4a82-82ed-a5f6866f7d03", timestamp).Exec()
+	}
 	err = session.Query(repository.InsertIntoPostTable, "1ea5b7bc-94eb-40c0-98fd-7858e197e3b2", "a2c2f993-dc32-4a82-82ed-a5f6866f7d03",
-		"Bitno da je nekad bilo lepo...", time.Now(), 0, 0, 0, false, "SM", 0.0, 0.0, mentions, hashtag2, media, "IMAGE", false).Exec()
+		"Bitno da je nekad bilo lepo...", timestamp, 0, 0, 0, false, "SM", 0.0, 0.0, mentions, hashtag2, media, "IMAGE", false).Exec()
 	if err != nil {
 		fmt.Println(err)
 	}
 
+
+
+
 	hashtag2 = [1]string{"idegasnamax"}
 	media = [1]string{"assets/images/pablo.jpg"}
+
+	timestamp = time.Now()
+	session.Query(repository.SeeIfPostExists, "adfee6f4-fe45-40ad-8f8e-760ec861a35e", "43420055-3174-4c2a-9823-a8f060d644c3").Iter().Scan(&ifExists)
+
+	if ifExists == 0 {
+		err = session.Query(repository.InsertIntoPostsTimestampTable, "adfee6f4-fe45-40ad-8f8e-760ec861a35e", "43420055-3174-4c2a-9823-a8f060d644c3", timestamp).Exec()
+	}
 
 	err = session.Query(repository.InsertIntoPostTable, "adfee6f4-fe45-40ad-8f8e-760ec861a35e", "43420055-3174-4c2a-9823-a8f060d644c3",
-		"Bitno da je nekad bilo lepo...", time.Now(), 0, 0, 0, false, "NS", 0.0, 0.0, mentions, hashtag2, media, "IMAGE", false).Exec()
+		"Bitno da je nekad bilo lepo...", timestamp, 0, 0, 0, false, "NS", 0.0, 0.0, mentions, hashtag2, media, "IMAGE", false).Exec()
 	if err != nil {
 		fmt.Println(err)
 	}
+
+
 
 }

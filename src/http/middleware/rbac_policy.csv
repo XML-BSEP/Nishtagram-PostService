@@ -20,6 +20,7 @@ p, USER, /post/editPost, *
 p, USER, /post/deletePost, *
 p, USER, /post/getPostsByUser, *
 p, USER, /post/getPost, *
+p, USER, /post/feed, *
 p, ANONYMOUS, /post/getPostsByUser, *
 p, ANONYMOUS, /post/getPost, *
 

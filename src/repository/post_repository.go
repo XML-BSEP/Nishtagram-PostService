@@ -12,9 +12,12 @@ import (
 const (
  	CreatePostTable = "CREATE TABLE if not exists post_keyspace.Posts (id text, profile_id text, description text, timestamp timestamp, num_of_likes int, num_of_dislikes int, num_of_comments int, banned boolean, location_name text, location_lat double," +
  		"location_long double, mentions list<text>, hashtags list<text>, media list<text>, type text, deleted boolean, PRIMARY KEY (profile_id, id));"
+	CreatePostsTimestampTable = "CREATE TABLE if not exists post_keyspace.PostsTimestamp (post_id text, profile_id text, timestamp timestamp, PRIMARY KEY (profile_id, timestamp)) WITH CLUSTERING ORDER BY (timestamp ASC);"
  	InsertIntoPostTable = "INSERT INTO post_keyspace.Posts (id, profile_id, description, timestamp, num_of_likes, " +
  		"num_of_dislikes, num_of_comments, banned, location_name, location_lat, location_long, mentions, hashtags, media, type, deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) IF NOT EXISTS;"
-	AddLikeToPost = "UPDATE post_keyspace.Posts SET num_of_likes = ? WHERE id = ? and profile_id = ?;"
+	InsertIntoPostsTimestampTable = "INSERT INTO post_keyspace.PostsTimestamp (post_id, profile_id, timestamp) VALUES (?, ?, ?);"
+	GetPostsInLastThreeDays = "SELECT post_id from post_keyspace.PostsTimestamp WHERE profile_id = ? AND timestamp >= ?;"
+ 	AddLikeToPost = "UPDATE post_keyspace.Posts SET num_of_likes = ? WHERE id = ? and profile_id = ?;"
 	AddDislikeToPost = "UPDATE post_keyspace.Posts SET num_of_dislikes = ? WHERE id = ? and profile_id = ?;"
 	AddCommentToPost = "UPDATE post_keyspace.Posts SET num_of_comments = ?  WHERE id = ? and profile_id = ?;"
 	RemoveLikeFromPost = "UPDATE post_keyspace.Posts SET num_of_likes = ? WHERE id = ? and profile_id = ? and;"
@@ -28,9 +31,11 @@ const (
 		"hashtags, media, type, deleted FROM post_keyspace.Posts where profile_id = ?;"
 	GetPostsForById = "SELECT id, profile_id, description, timestamp, num_of_likes, num_of_dislikes, num_of_comments, banned, location_name, mentions, " +
 		"hashtags, media, type, deleted  FROM post_keyspace.Posts where profile_id = ? and id = ?;"
-	UpdatePost = "UPDATE post_keyspace.Posts SET description = ?, mentions = ?, hashtags = ?, location_name = ?, location_lat = ?, location_long = ? WHERE profile_id = ? and id = ?;"
-	DeletePost = "UPDATE post_keyspace.Posts SET deleted = true WHERE profile_id = ? AND id = ?;"
+	UpdatePost        = "UPDATE post_keyspace.Posts SET description = ?, mentions = ?, hashtags = ?, location_name = ?, location_lat = ?, location_long = ? WHERE profile_id = ? and id = ?;"
+	DeletePost        = "UPDATE post_keyspace.Posts SET deleted = true WHERE profile_id = ? AND id = ?;"
 	IfDeletedOrBanned = "SELECT banned, deleted FROM post_keyspace.Posts WHERE profile_id = ? AND id = ?;"
+	SeeIfPostExists   = "SELECT count(*) FROM post_keyspace.Posts WHERE id = ? AND profile_id = ?;"
+
 	)
 type PostRepo interface {
 	CreatePost(req dto.CreatePostDTO, ctx context.Context) error
@@ -39,10 +44,22 @@ type PostRepo interface {
 	GetPostsByUserId(userId string, ctx context.Context) ([]dto.PostDTO, error)
 	GetPostsById(userId string, postId string, ctx context.Context) (dto.PostDTO, error)
 	SeeIfPostDeletedOrBanned(userId string, postId string, ctx context.Context) bool
+	GetPostsInDateTimeRange(userId string, timeRange time.Time, ctx context.Context) []string
 }
 
 type postRepository struct {
 	cassandraSession *gocql.Session
+}
+
+func (p postRepository) GetPostsInDateTimeRange(userId string, timeRange time.Time, ctx context.Context) []string {
+	var posts []string
+	iter := p.cassandraSession.Query(GetPostsInLastThreeDays, userId, timeRange).Iter().Scanner()
+	var post string
+	for iter.Next() {
+		iter.Scan(&post)
+		posts = append(posts, post)
+	}
+	return posts
 }
 
 func (p postRepository) SeeIfPostDeletedOrBanned(postId string, userId string, ctx context.Context) bool {
@@ -143,7 +160,9 @@ func NewPostRepository(cassandraSession *gocql.Session) PostRepo {
 		cassandraSession: cassandraSession,
 	}
 	err := p.cassandraSession.Query(CreatePostTable).Exec()
+	err = p.cassandraSession.Query(CreatePostsTimestampTable).Exec()
 	if err != nil {
+		fmt.Println(err)
 		return nil
 	}
 	return p

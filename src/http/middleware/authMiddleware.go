@@ -70,6 +70,9 @@ func ExtractToken(r *http.Request) string {
 
 func ExtractRole(r *http.Request) (string, error) {
 	tokenString := ExtractToken(r)
+	if tokenString == "" {
+		return "ANONYMOUS", nil
+	}
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -93,3 +96,22 @@ func ExtractRole(r *http.Request) (string, error) {
 	return "", err
 }
 
+func ExtractUserId(r *http.Request) (string, error) {
+	tokenString := ExtractToken(r)
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("ACCESS_SECRET")), nil
+	})
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+
+	if ok  {
+		userId, ok := claims["userId"].(string)
+		if !ok {
+			return "", err
+		}
+
+		return userId, nil
+	}
+	return "", err
+}
