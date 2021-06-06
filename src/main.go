@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	router2 "post-service/http/router"
 	"post-service/infrastructure/cassandra_config"
@@ -18,10 +19,13 @@ func main() {
 
 	handler := i.NewAppHandler()
 
-	repo := i.NewPostRepo()
-	repo.GetPostsByUserId("43420055-3174-4c2a-9823-a8f060d644c3", context.Background())
+	repo := i.NewPostUseCase()
+	res, err := repo.GenerateUserFeed("424935b1-766c-4f99-b306-9263731518bc", context.Background())
+	fmt.Println(res)
 
 	router := router2.NewRouter(handler)
 
-	router.Run("localhost:8083")
+
+	router.RunTLS("localhost:8083", "certificate/cert.pem", "certificate/key.pem")
+
 }

@@ -11,6 +11,7 @@ func NewRouter(handler handler.AppHandler) *gin.Engine{
 
 	g := router.Group("/post")
 
+	g.Use(middleware.C())
 	g.Use(middleware.AuthMiddleware())
 
 	g.POST("createPost", handler.AddPost)

@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"github.com/google/uuid"
 	"os"
 	"post-service/dto"
+	"post-service/gateway"
 	"post-service/repository"
 	"strconv"
 	"strings"
@@ -20,6 +22,7 @@ type PostUseCase interface {
 	GetPost(postId string, userId string, ctx context.Context) (dto.PostDTO, error)
 	EncodeBase64Images(images []string, userId string) ([]string, error)
 	GenerateUserFeed(userId string, ctx context.Context) ([]dto.PostPreviewDTO, error)
+	EncodeBase64(media string, userId string, ctx context.Context) (string, error)
 }
 
 type postUseCase struct {
@@ -27,16 +30,18 @@ type postUseCase struct {
 }
 
 func (p postUseCase) GenerateUserFeed(userId string, ctx context.Context) ([]dto.PostPreviewDTO, error) {
-	userFollowing := make([]string, 3)
-	userFollowing[0] = "424935b1-766c-4f99-b306-9263731518bc"
-	userFollowing[1] = "a2c2f993-dc32-4a82-82ed-a5f6866f7d03"
-	userFollowing[2] = "43420055-3174-4c2a-9823-a8f060d644c3"
+	userFollowing, err := gateway.GetAllUserFollowing(context.Background(), userId)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
 
 	inTimeRange := time.Now().Add(-72*time.Hour)
 	postsToShow := make(map[string][]string, len(userFollowing))
 	for _, user := range userFollowing {
-		posts := p.postRepository.GetPostsInDateTimeRange(user, inTimeRange, context.Background())
-		postsToShow[user] = append(postsToShow[user], posts...)
+		posts := p.postRepository.GetPostsInDateTimeRange(user.Id, inTimeRange, context.Background())
+		postsToShow[user.Id] = append(postsToShow[user.Id], posts...)
 	}
 
 	var postsPreview []dto.PostPreviewDTO
@@ -102,7 +107,70 @@ func (p postUseCase) EncodeBase64Images(images []string, userId string) ([]strin
 	return imagesToSave, nil
 }
 
+func (p postUseCase) EncodeBase64(media string, userId string, ctx context.Context) (string, error) {
+
+	workingDirectory, _ := os.Getwd()
+	path1 := "././assets/images"
+	os.Chdir(path1)
+	err := os.Mkdir("././assets/images" + userId, 0755)
+
+	os.Chdir("././assets/images" + userId)
+
+
+	s := strings.Split(media, ",")
+	a := strings.Split(s[0], "/")
+	format := strings.Split(a[1], ";")
+
+	dec, err := base64.StdEncoding.DecodeString(s[1])
+
+	if err != nil {
+		panic(err)
+	}
+	uuid := uuid.NewString()
+	f, err := os.Create(uuid + format[0])
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer f.Close()
+
+	if _, err := f.Write(dec); err != nil {
+		panic(err)
+	}
+	if err := f.Sync(); err != nil {
+		panic(err)
+	}
+
+	os.Chdir(workingDirectory)
+	return path1 + uuid + format[0], nil
+}
+
+
 func (p postUseCase) AddPost(postDTO dto.CreatePostDTO, ctx context.Context) error {
+	var media []string
+
+	if postDTO.IsImage || postDTO.IsVideo {
+		media = make([]string, 1)
+		mediaToAttach, err := p.EncodeBase64(postDTO.Image, postDTO.UserId.UserId, context.Background())
+		if err != nil {
+			return fmt.Errorf("error while decoding base64")
+		}
+		media[0] = mediaToAttach
+		postDTO.Media = media
+	} else {
+		media = make([]string, len(postDTO.Album))
+		for _, s := range postDTO.Album {
+			mediaToAttach, err := p.EncodeBase64(s, postDTO.UserId.UserId, context.Background())
+			if err != nil {
+				return fmt.Errorf("error while decoding base64")
+			}
+			media = append(media, mediaToAttach)
+		}
+
+		postDTO.Media = media
+	}
+
 	return p.postRepository.CreatePost(postDTO, context.Background())
 }
 
