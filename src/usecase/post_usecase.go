@@ -110,11 +110,16 @@ func (p postUseCase) EncodeBase64Images(images []string, userId string) ([]strin
 func (p postUseCase) EncodeBase64(media string, userId string, ctx context.Context) (string, error) {
 
 	workingDirectory, _ := os.Getwd()
-	path1 := "././assets/images"
-	os.Chdir(path1)
-	err := os.Mkdir("././assets/images" + userId, 0755)
+	path1 := "./assets/images/"
+	err := os.Chdir(path1)
+	if err != nil {
+		fmt.Println(err)
+	}
+	err = os.Mkdir(userId, 0755)
+	fmt.Println(err)
 
-	os.Chdir("././assets/images" + userId)
+	err = os.Chdir(userId)
+	fmt.Println(err)
 
 
 	s := strings.Split(media, ",")
@@ -127,7 +132,7 @@ func (p postUseCase) EncodeBase64(media string, userId string, ctx context.Conte
 		panic(err)
 	}
 	uuid := uuid.NewString()
-	f, err := os.Create(uuid + format[0])
+	f, err := os.Create(uuid + "." + format[0])
 
 	if err != nil {
 		panic(err)
@@ -143,14 +148,14 @@ func (p postUseCase) EncodeBase64(media string, userId string, ctx context.Conte
 	}
 
 	os.Chdir(workingDirectory)
-	return path1 + uuid + format[0], nil
+	return userId + "/" + uuid + "." + format[0], nil
 }
 
 
 func (p postUseCase) AddPost(postDTO dto.CreatePostDTO, ctx context.Context) error {
 	var media []string
 
-	if postDTO.IsImage || postDTO.IsVideo {
+	if postDTO.IsImage  {
 		media = make([]string, 1)
 		mediaToAttach, err := p.EncodeBase64(postDTO.Image, postDTO.UserId.UserId, context.Background())
 		if err != nil {
@@ -158,8 +163,19 @@ func (p postUseCase) AddPost(postDTO dto.CreatePostDTO, ctx context.Context) err
 		}
 		media[0] = mediaToAttach
 		postDTO.Media = media
-	} else {
-		media = make([]string, len(postDTO.Album))
+		postDTO.MediaType = "IMAGE"
+	}
+	if postDTO.IsVideo {
+		media = make([]string, 1)
+		mediaToAttach, err := p.EncodeBase64(postDTO.Video, postDTO.UserId.UserId, context.Background())
+		if err != nil {
+			return fmt.Errorf("error while decoding base64")
+		}
+		media[0] = mediaToAttach
+		postDTO.Media = media
+		postDTO.MediaType = "VIDEO"
+	}
+	if postDTO.IsAlbum{
 		for _, s := range postDTO.Album {
 			mediaToAttach, err := p.EncodeBase64(s, postDTO.UserId.UserId, context.Background())
 			if err != nil {
@@ -169,6 +185,7 @@ func (p postUseCase) AddPost(postDTO dto.CreatePostDTO, ctx context.Context) err
 		}
 
 		postDTO.Media = media
+		postDTO.MediaType = "IMAGE"
 	}
 
 	return p.postRepository.CreatePost(postDTO, context.Background())

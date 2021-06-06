@@ -142,7 +142,7 @@ func SeedLikes(session *gocql.Session) {
 func SeedPosts(session *gocql.Session) {
 
 	hashtags := [2]string{"tbt", "idegasnamax"}
-	media := [1]string{"assets/images/stefan_smeker.jpg"}
+	media := [1]string{"stefan_smeker.jpg"}
 	mentions := []string {""}
 	timestamp := time.Now()
 	var ifExists int
@@ -163,7 +163,7 @@ func SeedPosts(session *gocql.Session) {
 
 
 	hashtag2 := [1]string{"idegasnamax"}
-	media = [1]string{"assets/images/shone.jpg"}
+	media = [1]string{"shone.jpg"}
 
 	timestamp = time.Now()
 	session.Query(repository.SeeIfPostExists, "d459e0f2-ab61-48e8-a593-29933ce99525", "424935b1-766c-4f99-b306-9263731518bc").Iter().Scan(&ifExists)
@@ -181,7 +181,7 @@ func SeedPosts(session *gocql.Session) {
 
 
 	hashtag2 = [1]string{"idegasnamax"}
-	media = [1]string{"assets/images/pablo.jpg"}
+	media = [1]string{"pablo.jpg"}
 	timestamp = time.Now()
 	session.Query(repository.SeeIfPostExists, "1ea5b7bc-94eb-40c0-98fd-7858e197e3b2", "a2c2f993-dc32-4a82-82ed-a5f6866f7d03").Iter().Scan(&ifExists)
 
@@ -198,7 +198,7 @@ func SeedPosts(session *gocql.Session) {
 
 
 	hashtag2 = [1]string{"idegasnamax"}
-	media = [1]string{"assets/images/pablo.jpg"}
+	media = [1]string{"pablo.jpg"}
 
 	timestamp = time.Now()
 	session.Query(repository.SeeIfPostExists, "adfee6f4-fe45-40ad-8f8e-760ec861a35e", "43420055-3174-4c2a-9823-a8f060d644c3").Iter().Scan(&ifExists)

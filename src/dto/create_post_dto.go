@@ -13,6 +13,7 @@ type CreatePostDTO struct {
 	Album []string `json:"album"`
 	Media []string
 	MediaType string
+	Video string `json:"video"`
 
 }
 

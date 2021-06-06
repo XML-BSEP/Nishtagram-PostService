@@ -114,7 +114,7 @@ func (p postHandler) AddPost(context *gin.Context) {
 		context.Abort()
 		return
 	}
-
+	createPostDTO.UserId.UserId, _ = middleware.ExtractUserId(context.Request)
 	err := p.postUseCase.AddPost(createPostDTO, context)
 
 	if err != nil {
