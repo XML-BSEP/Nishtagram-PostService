@@ -142,6 +142,9 @@ func (p postUseCase) GetPostsOnProfile(profileId string, userRequested string, c
 	var retVal []dto.PostInDTO
 	for _, post := range posts {
 		dto := dto.PostInDTO{PostId: post.Id, Posts: post.Media[0], User: post.Profile.Id}
+		if post.MediaType.Type == "VIDEO" {
+			dto.IsVideo = true
+		}
 		retVal = append(retVal, dto)
 	}
 
@@ -402,6 +405,14 @@ func (p postUseCase) GetPost(postId string, userId string, userRequestedId strin
 				appendToTags = appendToTags + "@" + s
 			}
 		}
+	}
+
+	if post.MediaType.Type == "VIDEO" {
+		post.IsVideo = true
+	}
+
+	if post.MediaType.Type == "ALBUM" || len(post.Media) > 1 {
+		post.IsAlbum = true
 	}
 
 	if p.likeRepository.SeeIfLikeExists(post.Id, userRequestedId, context.Background()) {

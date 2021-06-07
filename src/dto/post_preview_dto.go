@@ -39,6 +39,7 @@ func NewPostPreviewDTO(post PostDTO) PostPreviewDTO {
 		IsAlbum: post.IsAlbum,
 		IsDisliked: post.IsDisliked,
 		IsLiked: post.IsLiked,
+		IsVideo: post.IsVideo,
 		IsBookmarked: post.IsBookmarked,
 		NumOfComments: post.NumOfComments,
 		NumOfDislikes: post.NumOfDislikes,
