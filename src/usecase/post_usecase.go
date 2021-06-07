@@ -53,14 +53,81 @@ func (p postUseCase) GetPostDTO(postId string, userId string, userRequestedId st
 
 	appendToDescHashtags := ""
 	appendToTags := ""
-	for _, s := range post.Hashtags {
-		appendToDescHashtags = appendToDescHashtags + "#" + s
+	if len(post.Hashtags) > 0 {
+		for _, s := range post.Hashtags {
+			if s != "" {
+				appendToDescHashtags = appendToDescHashtags + "#" + s
+			}
+		}
 	}
 
-	for _, s := range post.Mentions {
-		appendToTags = appendToTags + "@" + s
+	if len(post.Mentions) > 0 {
+		for _, s := range post.Mentions {
+			if s != "" {
+				appendToTags = appendToTags + "@" + s
+			}
+		}
+	}
+	if len(post.Hashtags) > 0 {
+		for _, s := range post.Hashtags {
+			if s != "" {
+				appendToDescHashtags = appendToDescHashtags + "#" + s
+			}
+		}
 	}
 
+	if len(post.Mentions) > 0 {
+		for _, s := range post.Mentions {
+			if s != "" {
+				appendToTags = appendToTags + "@" + s
+			}
+		}
+	}
+	if len(post.Hashtags) > 0 {
+		for _, s := range post.Hashtags {
+			if s != "" {
+				appendToDescHashtags = appendToDescHashtags + "#" + s
+			}
+		}
+	}
+
+	if len(post.Mentions) > 0 {
+		for _, s := range post.Mentions {
+			if s != "" {
+				appendToTags = appendToTags + "@" + s
+			}
+		}
+	}
+	if len(post.Hashtags) > 0 {
+		for _, s := range post.Hashtags {
+			if s != "" {
+				appendToDescHashtags = appendToDescHashtags + "#" + s
+			}
+		}
+	}
+
+	if len(post.Mentions) > 0 {
+		for _, s := range post.Mentions {
+			if s != "" {
+				appendToTags = appendToTags + "@" + s
+			}
+		}
+	}
+	if len(post.Hashtags) > 0 {
+		for _, s := range post.Hashtags {
+			if s != "" {
+				appendToDescHashtags = appendToDescHashtags + "#" + s
+			}
+		}
+	}
+
+	if len(post.Mentions) > 0 {
+		for _, s := range post.Mentions {
+			if s != "" {
+				appendToTags = appendToTags + "@" + s
+			}
+		}
+	}
 	post.Description = post.Description + "\n\n" + appendToTags + "\n\n" + appendToDescHashtags
 	post.Media = mediaToAppend
 
@@ -321,12 +388,20 @@ func (p postUseCase) GetPost(postId string, userId string, userRequestedId strin
 
 	appendToDescHashtags := ""
 	appendToTags := ""
-	for _, s := range post.Hashtags {
-		appendToDescHashtags = appendToDescHashtags + "#" + s
+	if len(post.Hashtags) > 0 {
+		for _, s := range post.Hashtags {
+			if s != "" {
+				appendToDescHashtags = appendToDescHashtags + "#" + s
+			}
+		}
 	}
 
-	for _, s := range post.Mentions {
-		appendToTags = appendToTags + "@" + s
+	if len(post.Mentions) > 0 {
+		for _, s := range post.Mentions {
+			if s != "" {
+				appendToTags = appendToTags + "@" + s
+			}
+		}
 	}
 
 	if p.likeRepository.SeeIfLikeExists(post.Id, userRequestedId, context.Background()) {
