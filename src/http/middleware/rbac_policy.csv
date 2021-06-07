@@ -22,6 +22,10 @@ p, USER, /post/getPostsByUser, *
 p, USER, /post/getPost, *
 p, USER, /post/feed, *
 p, USER, /post/getAllComments, *
+p, USER, /post/getPostsOnProfile, *
+p, USER, /post/getPostById, *
+p, ANONYMOUS, /post/getPostById, *
+p, ANONYMOUS, /post/getPostsOnProfile, *
 p, ANONYMOUS, /post/getAllComments, *
 p, ANONYMOUS, /post/getPostsByUser, *
 p, ANONYMOUS, /post/getPost, *

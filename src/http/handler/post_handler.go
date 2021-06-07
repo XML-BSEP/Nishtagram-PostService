@@ -1,8 +1,10 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"post-service/domain"
 	"post-service/dto"
 	"post-service/http/middleware"
 	"post-service/usecase"
@@ -14,10 +16,59 @@ type PostHandler interface {
 	DeletePost(context *gin.Context)
 	GetPostsByUser(context *gin.Context)
 	GenerateUserFeed(context *gin.Context)
+	GetPostsOnProfile(context *gin.Context)
+	GetPostById(ctx *gin.Context)
 }
 
 type postHandler struct {
 	postUseCase usecase.PostUseCase
+}
+
+func (p postHandler) GetPostById(ctx *gin.Context) {
+	var postDTO dto.GetPostDTO
+	decoder := json.NewDecoder(ctx.Request.Body)
+
+	if err := decoder.Decode(&postDTO); err != nil {
+		ctx.JSON(400, "invalid request")
+		ctx.Abort()
+		return
+	}
+	userRequested, _ := middleware.ExtractUserId(ctx.Request)
+
+	post, err := p.postUseCase.GetPost(postDTO.PostId, postDTO.UserId, userRequested, context.Background())
+	if err != nil {
+		ctx.JSON(500, gin.H{"message":"server error"})
+		ctx.Abort()
+		return
+	}
+
+	ctx.JSON(200, post)
+
+
+}
+
+func (p postHandler) GetPostsOnProfile(ctx *gin.Context) {
+	var userDTO domain.Profile
+	decoder := json.NewDecoder(ctx.Request.Body)
+
+	if err := decoder.Decode(&userDTO); err != nil {
+		ctx.JSON(400, "invalid request")
+		ctx.Abort()
+		return
+	}
+
+	userRequested, _ := middleware.ExtractUserId(ctx.Request)
+
+	posts, err := p.postUseCase.GetPostsOnProfile(userRequested, userRequested, context.Background())
+
+	if err != nil {
+		ctx.JSON(500, gin.H{"message":"server error"})
+		ctx.Abort()
+		return
+	}
+
+	ctx.JSON(200, posts)
+
 }
 
 func (p postHandler) GenerateUserFeed(context *gin.Context) {

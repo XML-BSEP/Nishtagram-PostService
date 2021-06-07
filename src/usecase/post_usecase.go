@@ -20,10 +20,12 @@ type PostUseCase interface {
 	DeletePost(postDTO dto.DeletePostDTO, ctx context.Context) error
 	EditPost(postDTO dto.UpdatePostDTO, ctx context.Context) error
 	GetPostsByUser(userId string, userRequestedId string, ctx context.Context) ([]dto.PostDTO, error)
-	GetPost(postId string, userId string, userRequestedId string, ctx context.Context) (dto.PostDTO, error)
+	GetPost(postId string, userId string, userRequestedId string, ctx context.Context) (dto.PostPreviewDTO, error)
+	GetPostDTO(postId string, userId string, userRequestedId string, ctx context.Context) (dto.PostDTO, error)
 	GenerateUserFeed(userId string, userRequestedId string, ctx context.Context) ([]dto.PostPreviewDTO, error)
 	EncodeBase64(media string, userId string, ctx context.Context) (string, error)
 	DecodeBase64(media string, userId string, ctx context.Context) (string, error)
+	GetPostsOnProfile(profileId string, userRequested string, ctx context.Context) ([]dto.PostInDTO, error)
 }
 
 type postUseCase struct {
@@ -33,21 +35,68 @@ type postUseCase struct {
 	favoriteRepository repository.FavoritesRepo
 }
 
+func (p postUseCase) GetPostDTO(postId string, userId string, userRequestedId string, ctx context.Context) (dto.PostDTO, error) {
+	post, err := p.postRepository.GetPostsById(userId, postId, context.Background())
+	if err != nil {
+		return dto.PostDTO{}, err
+	}
+	var mediaToAppend []string
+
+	for _, s := range post.Media {
+		base64Image, err := p.DecodeBase64(s, userId, context.Background())
+		if err != nil {
+			continue
+		}
+
+		mediaToAppend = append(mediaToAppend, base64Image)
+	}
+
+	appendToDescHashtags := ""
+	appendToTags := ""
+	for _, s := range post.Hashtags {
+		appendToDescHashtags = appendToDescHashtags + "#" + s
+	}
+
+	for _, s := range post.Mentions {
+		appendToTags = appendToTags + "@" + s
+	}
+
+	post.Description = post.Description + "\n\n" + appendToTags + "\n\n" + appendToDescHashtags
+	post.Media = mediaToAppend
+
+	return post, nil
+}
+
+func (p postUseCase) GetPostsOnProfile(profileId string, userRequested string, ctx context.Context) ([]dto.PostInDTO, error) {
+	posts, err := p.GetPostsByUser(profileId, userRequested, context.Background())
+	if err != nil {
+		return nil, err
+	}
+	var retVal []dto.PostInDTO
+	for _, post := range posts {
+		dto := dto.PostInDTO{PostId: post.Id, Posts: post.Media[0], User: post.Profile.Id}
+		retVal = append(retVal, dto)
+	}
+
+	return retVal, nil
+}
+
 func (p postUseCase) DecodeBase64(media string, userId string, ctx context.Context) (string, error) {
 	workingDirectory, _ := os.Getwd()
 
 	path1 := "./assets/images/"
 	err := os.Chdir(path1)
 	fmt.Println(err)
-
-	err = os.Chdir(userId)
 	spliced := strings.Split(media, "/")
 	var f *os.File
 	if len(spliced) > 1 {
+		err = os.Chdir(userId)
 		f, _ = os.Open(spliced[1])
 	} else {
 		f, _ = os.Open(spliced[0])
 	}
+
+
 
 
 	reader := bufio.NewReader(f)
@@ -244,7 +293,7 @@ func (p postUseCase) GetPostsByUser(userId string, userRequestedId string, ctx c
 	}
 
 	for _, post := range posts {
-		converted, err := p.GetPost(post.Id, post.Profile.Id, userRequestedId, context.Background())
+		converted, err := p.GetPostDTO(post.Id, post.Profile.Id, userRequestedId, context.Background())
 		if err != nil {
 			continue
 		}
@@ -254,10 +303,10 @@ func (p postUseCase) GetPostsByUser(userId string, userRequestedId string, ctx c
 	return retVal, nil
 }
 
-func (p postUseCase) GetPost(postId string, userId string, userRequestedId string, ctx context.Context) (dto.PostDTO, error) {
+func (p postUseCase) GetPost(postId string, userId string, userRequestedId string, ctx context.Context) (dto.PostPreviewDTO, error) {
 	post, err := p.postRepository.GetPostsById(userId, postId, context.Background())
 	if err != nil {
-		return dto.PostDTO{}, err
+		return dto.PostPreviewDTO{}, err
 	}
 	var mediaToAppend []string
 
@@ -280,10 +329,20 @@ func (p postUseCase) GetPost(postId string, userId string, userRequestedId strin
 		appendToTags = appendToTags + "@" + s
 	}
 
+	if p.likeRepository.SeeIfLikeExists(post.Id, userRequestedId, context.Background()) {
+		post.IsLiked = true
+	}
+
+	if p.likeRepository.SeeIfDislikeExists(post.Id, userRequestedId, context.Background()) {
+		post.IsDisliked = true
+	}
+
+
+
 	post.Description = post.Description + "\n\n" + appendToTags + "\n\n" + appendToDescHashtags
 	post.Media = mediaToAppend
 
-	return post, nil
+	return dto.NewPostPreviewDTO(post), nil
 
 }
 

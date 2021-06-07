@@ -21,7 +21,7 @@ type likeUseCase struct {
 }
 
 func (l likeUseCase) RemoveLike(dto dto.LikeDislikeDTO, ctx context.Context) error {
-	return l.likeRepository.RemoveLike(dto.PostBy, dto.PostBy, domain.Profile{Id: dto.UserId}, context.Background())
+	return l.likeRepository.RemoveLike(dto.PostId, dto.PostBy, domain.Profile{Id: dto.UserId}, context.Background())
 }
 
 func (l likeUseCase) LikePost(dto dto.LikeDislikeDTO, ctx context.Context) error {
@@ -49,7 +49,7 @@ func (l likeUseCase) DislikePost(dto dto.LikeDislikeDTO, ctx context.Context) er
 }
 
 func (l likeUseCase) RemoveDislike(dto dto.LikeDislikeDTO, ctx context.Context) error {
-	return l.likeRepository.RemoveDislike(dto.PostBy, dto.PostBy, domain.Profile{Id: dto.UserId}, context.Background())
+	return l.likeRepository.RemoveDislike(dto.PostId, dto.PostBy, domain.Profile{Id: dto.UserId}, context.Background())
 }
 
 func (l likeUseCase) GetLikesForPost(postId string, ctx context.Context) ([]dto.LikeDislikePreviewDTO, error) {
