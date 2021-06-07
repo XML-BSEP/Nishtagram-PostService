@@ -1,7 +1,6 @@
 package cassandra_config
 
 import (
-	"fmt"
 	"github.com/gocql/gocql"
 	"github.com/spf13/viper"
 	"log"
@@ -24,9 +23,13 @@ const (
 
 func NewCassandraSession() (*gocql.Session, error) {
 	init_viper()
-	domain := viper.GetString(`server.domain`) + ":" + viper.GetString(`server.port`)
-	fmt.Println(domain)
-	cluster := gocql.NewCluster(viper.GetString(`server.domain`) + ":" + viper.GetString(`server.port`))
+	var domain string
+	if viper.GetBool(`docker`){
+		domain = viper.GetString(`server.domain_docker`) + ":" + viper.GetString(`server.port`)
+	}else{
+		domain = viper.GetString(`server.domain_localhost`) + ":" + viper.GetString(`server.port`)
+	}
+	cluster := gocql.NewCluster(domain)
 	cluster.ProtoVersion, _ = strconv.Atoi(viper.GetString(`proto_version`))
 	cluster.Consistency = gocql.LocalQuorum
 	cluster.Timeout = time.Second * 1000

@@ -1,7 +1,9 @@
 {
   "production" : false,
+  "docker": true,
   "server" : {
-    "domain": "127.0.0.1",
+    "domain_localhost": "127.0.0.1",
+    "domain_docker" : "cassandrapost",
     "port": 7000
   },
   "proto_version" : 4
