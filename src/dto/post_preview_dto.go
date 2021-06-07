@@ -6,6 +6,7 @@ import (
 )
 
 type PostPreviewDTO struct {
+	Id string `json:"id" validate:"required"`
 	Media []string `json:"images" validate:"required"`
 	Type string
 	UserName string
@@ -21,7 +22,7 @@ type PostPreviewDTO struct {
 	NumOfComments int `json:"numOfComments" validate:"required"`
 	Banned bool
 	IsVideo bool `json:"isVideo" validate:"required"`
-	Profile domain.Profile `json:"user" validate:"required"`
+	//Profile domain.Profile `json:"user" validate:"required"`
 	IsBookmarked bool `json:"isBookmarked" validate:"required"`
 	IsDisliked bool `json:"isDisliked" validate:"required"`
 	IsLiked bool `json:"isLiked" validate:"required"`
@@ -30,6 +31,7 @@ type PostPreviewDTO struct {
 
 func NewPostPreviewDTO(post PostDTO) PostPreviewDTO {
 	return PostPreviewDTO{
+		Id : post.Id,
 		Media: post.Media,
 		User: post.Profile,
 		Location: post.Location,
@@ -42,7 +44,7 @@ func NewPostPreviewDTO(post PostDTO) PostPreviewDTO {
 		NumOfDislikes: post.NumOfDislikes,
 		NumOfLikes: post.NumOfLikes,
 		Banned: post.Banned,
-		Profile: post.Profile,
+		//Profile: post.Profile,
 		Type: post.MediaType.Type,
 		UserName: "",
 		UserUsername: "",

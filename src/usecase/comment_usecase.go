@@ -9,10 +9,15 @@ import (
 type CommentUseCase interface {
 	AddComment(comment dto.CommentDTO, ctx context.Context) error
 	DeleteComment(comment dto.CommentDTO, ctx context.Context) error
+	GetAllCommentsByPost(postId string, ctx context.Context) ([]dto.CommentDTO, error)
 }
 
 type commentUseCase struct {
 	commentRepository repository.CommentRepo
+}
+
+func (c commentUseCase) GetAllCommentsByPost(postId string, ctx context.Context) ([]dto.CommentDTO, error) {
+	return c.commentRepository.GetComments(postId, context.Background())
 }
 
 func (c commentUseCase) AddComment(comment dto.CommentDTO, ctx context.Context) error {

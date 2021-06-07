@@ -35,6 +35,7 @@ func NewRouter(handler handler.AppHandler) *gin.Engine{
 	g.POST("editPost", handler.EditPost)
 	g.POST("deletePost", handler.DeletePost)
 	g.GET("feed", handler.GenerateUserFeed)
+	g.POST("getAllComments", handler.GetComments)
 
 	return router
 }

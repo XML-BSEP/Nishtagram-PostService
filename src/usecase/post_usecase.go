@@ -43,7 +43,7 @@ func (p postUseCase) DecodeBase64(media string, userId string, ctx context.Conte
 	err = os.Chdir(userId)
 	spliced := strings.Split(media, "/")
 	var f *os.File
-	if len(spliced) > 2 {
+	if len(spliced) > 1 {
 		f, _ = os.Open(spliced[1])
 	} else {
 		f, _ = os.Open(spliced[0])
@@ -95,6 +95,7 @@ func (p postUseCase) GenerateUserFeed(userId string, userRequestedId string, ctx
 				}
 				mediaToAppend = append(mediaToAppend, base64Image)
 			}
+
 			post.Media = mediaToAppend
 			if post.MediaType.Type == "VIDEO" {
 				post.IsVideo = true
