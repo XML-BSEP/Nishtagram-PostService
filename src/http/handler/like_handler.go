@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"post-service/dto"
+	"post-service/http/middleware"
 	"post-service/usecase"
 )
 
@@ -28,6 +29,7 @@ func (l likeHandler) DislikePost(context *gin.Context) {
 		context.Abort()
 		return
 	}
+	dislikeDTO.UserId, _ = middleware.ExtractUserId(context.Request)
 
 	err := l.likeUseCase.DislikePost(dislikeDTO, context)
 
@@ -49,6 +51,8 @@ func (l likeHandler) RemoveLike(context *gin.Context) {
 		return
 	}
 
+	likeDTO.UserId, _ = middleware.ExtractUserId(context.Request)
+
 	err := l.likeUseCase.RemoveLike(likeDTO, context)
 
 	if err != nil {
@@ -69,6 +73,7 @@ func (l likeHandler) RemoveDislike(context *gin.Context) {
 		return
 	}
 
+	dislikeDTO.UserId, _ = middleware.ExtractUserId(context.Request)
 	err := l.likeUseCase.RemoveDislike(dislikeDTO, context)
 
 	if err != nil {
@@ -88,6 +93,8 @@ func (l likeHandler) LikePost(context *gin.Context) {
 		context.Abort()
 		return
 	}
+
+	likeDTO.UserId, _ = middleware.ExtractUserId(context.Request)
 
 	err := l.likeUseCase.LikePost(likeDTO, context)
 

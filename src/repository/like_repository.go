@@ -121,7 +121,7 @@ func (l likeRepository) DislikePost(postId string, postBy string, profile domain
 }
 
 func (l likeRepository) RemoveLike(postId string, postBy string, profile domain.Profile, ctx context.Context) error {
-	err := l.cassandraSession.Query(RemoveLike, postBy, profile.Id).Exec()
+	err := l.cassandraSession.Query(RemoveLike, postId, profile.Id).Exec()
 	if err != nil {
 		return err
 	}
@@ -142,7 +142,7 @@ func (l likeRepository) RemoveLike(postId string, postBy string, profile domain.
 }
 
 func (l likeRepository) RemoveDislike(postId string, postBy string, profile domain.Profile, ctx context.Context) error {
-	err := l.cassandraSession.Query(RemoveDislike, postBy, profile.Id).Exec()
+	err := l.cassandraSession.Query(RemoveDislike, postId, profile.Id).Exec()
 	if err != nil {
 		return err
 	}

@@ -1,15 +1,16 @@
 package usecase
 
 import (
+	"bufio"
 	"context"
 	"encoding/base64"
 	"fmt"
 	"github.com/google/uuid"
+	"io/ioutil"
 	"os"
 	"post-service/dto"
 	"post-service/gateway"
 	"post-service/repository"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -18,19 +19,171 @@ type PostUseCase interface {
 	AddPost(postDTO dto.CreatePostDTO, ctx context.Context) error
 	DeletePost(postDTO dto.DeletePostDTO, ctx context.Context) error
 	EditPost(postDTO dto.UpdatePostDTO, ctx context.Context) error
-	GetPostsByUser(userId string, ctx context.Context) ([]dto.PostDTO, error)
-	GetPost(postId string, userId string, ctx context.Context) (dto.PostDTO, error)
-	EncodeBase64Images(images []string, userId string) ([]string, error)
-	GenerateUserFeed(userId string, ctx context.Context) ([]dto.PostPreviewDTO, error)
+	GetPostsByUser(userId string, userRequestedId string, ctx context.Context) ([]dto.PostDTO, error)
+	GetPost(postId string, userId string, userRequestedId string, ctx context.Context) (dto.PostPreviewDTO, error)
+	GetPostDTO(postId string, userId string, userRequestedId string, ctx context.Context) (dto.PostDTO, error)
+	GenerateUserFeed(userId string, userRequestedId string, ctx context.Context) ([]dto.PostPreviewDTO, error)
 	EncodeBase64(media string, userId string, ctx context.Context) (string, error)
+	DecodeBase64(media string, userId string, ctx context.Context) (string, error)
+	GetPostsOnProfile(profileId string, userRequested string, ctx context.Context) ([]dto.PostInDTO, error)
 }
 
 type postUseCase struct {
 	postRepository repository.PostRepo
+	likeRepository repository.LikeRepo
+	collectionRepository repository.CollectionRepo
+	favoriteRepository repository.FavoritesRepo
 }
 
-func (p postUseCase) GenerateUserFeed(userId string, ctx context.Context) ([]dto.PostPreviewDTO, error) {
-	userFollowing, err := gateway.GetAllUserFollowing(context.Background(), userId)
+func (p postUseCase) GetPostDTO(postId string, userId string, userRequestedId string, ctx context.Context) (dto.PostDTO, error) {
+	post, err := p.postRepository.GetPostsById(userId, postId, context.Background())
+	if err != nil {
+		return dto.PostDTO{}, err
+	}
+	var mediaToAppend []string
+
+	for _, s := range post.Media {
+		base64Image, err := p.DecodeBase64(s, userId, context.Background())
+		if err != nil {
+			continue
+		}
+
+		mediaToAppend = append(mediaToAppend, base64Image)
+	}
+
+	appendToDescHashtags := ""
+	appendToTags := ""
+	if len(post.Hashtags) > 0 {
+		for _, s := range post.Hashtags {
+			if s != "" {
+				appendToDescHashtags = appendToDescHashtags + "#" + s
+			}
+		}
+	}
+
+	if len(post.Mentions) > 0 {
+		for _, s := range post.Mentions {
+			if s != "" {
+				appendToTags = appendToTags + "@" + s
+			}
+		}
+	}
+	if len(post.Hashtags) > 0 {
+		for _, s := range post.Hashtags {
+			if s != "" {
+				appendToDescHashtags = appendToDescHashtags + "#" + s
+			}
+		}
+	}
+
+	if len(post.Mentions) > 0 {
+		for _, s := range post.Mentions {
+			if s != "" {
+				appendToTags = appendToTags + "@" + s
+			}
+		}
+	}
+	if len(post.Hashtags) > 0 {
+		for _, s := range post.Hashtags {
+			if s != "" {
+				appendToDescHashtags = appendToDescHashtags + "#" + s
+			}
+		}
+	}
+
+	if len(post.Mentions) > 0 {
+		for _, s := range post.Mentions {
+			if s != "" {
+				appendToTags = appendToTags + "@" + s
+			}
+		}
+	}
+	if len(post.Hashtags) > 0 {
+		for _, s := range post.Hashtags {
+			if s != "" {
+				appendToDescHashtags = appendToDescHashtags + "#" + s
+			}
+		}
+	}
+
+	if len(post.Mentions) > 0 {
+		for _, s := range post.Mentions {
+			if s != "" {
+				appendToTags = appendToTags + "@" + s
+			}
+		}
+	}
+	if len(post.Hashtags) > 0 {
+		for _, s := range post.Hashtags {
+			if s != "" {
+				appendToDescHashtags = appendToDescHashtags + "#" + s
+			}
+		}
+	}
+
+	if len(post.Mentions) > 0 {
+		for _, s := range post.Mentions {
+			if s != "" {
+				appendToTags = appendToTags + "@" + s
+			}
+		}
+	}
+	post.Description = post.Description + "\n\n" + appendToTags + "\n\n" + appendToDescHashtags
+	post.Media = mediaToAppend
+
+	return post, nil
+}
+
+func (p postUseCase) GetPostsOnProfile(profileId string, userRequested string, ctx context.Context) ([]dto.PostInDTO, error) {
+	posts, err := p.GetPostsByUser(profileId, userRequested, context.Background())
+	if err != nil {
+		return nil, err
+	}
+	var retVal []dto.PostInDTO
+	for _, post := range posts {
+		dto := dto.PostInDTO{PostId: post.Id, Posts: post.Media[0], User: post.Profile.Id}
+		if post.MediaType.Type == "VIDEO" {
+			dto.IsVideo = true
+		}
+		retVal = append(retVal, dto)
+	}
+
+	return retVal, nil
+}
+
+func (p postUseCase) DecodeBase64(media string, userId string, ctx context.Context) (string, error) {
+	workingDirectory, _ := os.Getwd()
+
+	path1 := "./assets/images/"
+	err := os.Chdir(path1)
+	fmt.Println(err)
+	spliced := strings.Split(media, "/")
+	var f *os.File
+	if len(spliced) > 1 {
+		err = os.Chdir(userId)
+		f, _ = os.Open(spliced[1])
+	} else {
+		f, _ = os.Open(spliced[0])
+	}
+
+
+
+
+	reader := bufio.NewReader(f)
+	content, _ := ioutil.ReadAll(reader)
+
+
+	encoded := base64.StdEncoding.EncodeToString(content)
+
+
+	fmt.Println("ENCODED: " + encoded)
+	os.Chdir(workingDirectory)
+
+	return "data:image/jpg;base64," + encoded, nil
+}
+
+func (p postUseCase) GenerateUserFeed(userId string, userRequestedId string, ctx context.Context) ([]dto.PostPreviewDTO, error) {
+	userFollowing, err := gateway.GetAllUserFollowing(context.Background(), userRequestedId)
 	if err != nil {
 		fmt.Println(err)
 		return nil, err
@@ -41,7 +194,9 @@ func (p postUseCase) GenerateUserFeed(userId string, ctx context.Context) ([]dto
 	postsToShow := make(map[string][]string, len(userFollowing))
 	for _, user := range userFollowing {
 		posts := p.postRepository.GetPostsInDateTimeRange(user.Id, inTimeRange, context.Background())
-		postsToShow[user.Id] = append(postsToShow[user.Id], posts...)
+		if posts != nil {
+			postsToShow[user.Id] = append(postsToShow[user.Id], posts...)
+		}
 	}
 
 	var postsPreview []dto.PostPreviewDTO
@@ -51,60 +206,60 @@ func (p postUseCase) GenerateUserFeed(userId string, ctx context.Context) ([]dto
 			if err != nil {
 				continue
 			}
+			var mediaToAppend []string
+			for _, media := range post.Media {
+				base64Image, err := p.DecodeBase64(media, post.Profile.Id, context.Background())
+				if err != nil {
+					continue
+				}
+				mediaToAppend = append(mediaToAppend, base64Image)
+			}
+
+			post.Media = mediaToAppend
+			if post.MediaType.Type == "VIDEO" {
+				post.IsVideo = true
+			}
+			if post.MediaType.Type == "IMAGE" {
+				if len(post.Media) > 1 {
+					post.IsAlbum = true
+				}
+			}
+
+			appendToDescHashtags := ""
+			appendToTags := ""
+			if len(post.Hashtags) > 0 {
+				for _, s := range post.Hashtags {
+					if s != "" {
+						appendToDescHashtags = appendToDescHashtags + "#" + s
+					}
+				}
+			}
+
+			if len(post.Mentions) > 0 {
+				for _, s := range post.Mentions {
+					if s != "" {
+						appendToTags = appendToTags + "@" + s
+					}
+				}
+			}
+
+			if p.likeRepository.SeeIfLikeExists(post.Id, userRequestedId, context.Background()) {
+				post.IsLiked = true
+			}
+
+			if p.likeRepository.SeeIfDislikeExists(post.Id, userRequestedId, context.Background()) {
+				post.IsDisliked = true
+			}
+
+
+			post.Description = post.Description + "\n\n" + appendToTags + "\n\n" + appendToDescHashtags
+
 			postsPreview = append(postsPreview, dto.NewPostPreviewDTO(post))
+
 		}
 	}
 
 	return postsPreview, nil
-}
-
-func (p postUseCase) EncodeBase64Images(images []string, userId string) ([]string, error) {
-	path2, _ := os.Getwd()
-	fmt.Println(path2)
-
-	path1 := "./src/assets"
-	os.Chdir(path1)
-
-	os.Mkdir(userId, 0755)
-
-	os.Chdir(userId)
-
-	imagesToSave := make([]string, len(images))
-
-	if len(images) > 0{
-		for i,_ := range images {
-
-			s := strings.Split(images[i], ",")
-			a := strings.Split(s[0], "/")
-			format := strings.Split(a[1], ";")
-
-			dec, err := base64.StdEncoding.DecodeString(s[1])
-
-			if err != nil {
-				return nil, err
-			}
-			f, err := os.Create(strconv.Itoa(i) + "." + format[0])
-
-			if err != nil {
-				return nil, err
-			}
-
-			defer f.Close()
-
-			if _, err := f.Write(dec); err != nil {
-				return nil, err
-			}
-			if err := f.Sync(); err != nil {
-				return nil, err
-			}
-
-			imagesToSave = append(imagesToSave, "/" + strconv.Itoa(i) + "." + format[0])
-		}
-	}
-
-
-	os.Chdir(path2)
-	return imagesToSave, nil
 }
 
 func (p postUseCase) EncodeBase64(media string, userId string, ctx context.Context) (string, error) {
@@ -199,14 +354,89 @@ func (p postUseCase) EditPost(postDTO dto.UpdatePostDTO, ctx context.Context) er
 	return p.postRepository.EditPost(postDTO, context.Background())
 }
 
-func (p postUseCase) GetPostsByUser(userId string, ctx context.Context) ([]dto.PostDTO, error) {
-	return p.postRepository.GetPostsByUserId(userId, context.Background())
+func (p postUseCase) GetPostsByUser(userId string, userRequestedId string, ctx context.Context) ([]dto.PostDTO, error) {
+	posts, err := p.postRepository.GetPostsByUserId(userId, context.Background())
+	var retVal []dto.PostDTO
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, post := range posts {
+		converted, err := p.GetPostDTO(post.Id, post.Profile.Id, userRequestedId, context.Background())
+		if err != nil {
+			continue
+		}
+		retVal = append(retVal, converted)
+	}
+
+	return retVal, nil
 }
 
-func (p postUseCase) GetPost(postId string, userId string, ctx context.Context) (dto.PostDTO, error) {
-	return p.postRepository.GetPostsById(userId, postId, context.Background())
+func (p postUseCase) GetPost(postId string, userId string, userRequestedId string, ctx context.Context) (dto.PostPreviewDTO, error) {
+	post, err := p.postRepository.GetPostsById(userId, postId, context.Background())
+	if err != nil {
+		return dto.PostPreviewDTO{}, err
+	}
+	var mediaToAppend []string
+
+	for _, s := range post.Media {
+		base64Image, err := p.DecodeBase64(s, userId, context.Background())
+		if err != nil {
+			continue
+		}
+
+		mediaToAppend = append(mediaToAppend, base64Image)
+	}
+
+	appendToDescHashtags := ""
+	appendToTags := ""
+	if len(post.Hashtags) > 0 {
+		for _, s := range post.Hashtags {
+			if s != "" {
+				appendToDescHashtags = appendToDescHashtags + "#" + s
+			}
+		}
+	}
+
+	if len(post.Mentions) > 0 {
+		for _, s := range post.Mentions {
+			if s != "" {
+				appendToTags = appendToTags + "@" + s
+			}
+		}
+	}
+
+	if post.MediaType.Type == "VIDEO" {
+		post.IsVideo = true
+	}
+
+	if post.MediaType.Type == "ALBUM" || len(post.Media) > 1 {
+		post.IsAlbum = true
+	}
+
+	if p.likeRepository.SeeIfLikeExists(post.Id, userRequestedId, context.Background()) {
+		post.IsLiked = true
+	}
+
+	if p.likeRepository.SeeIfDislikeExists(post.Id, userRequestedId, context.Background()) {
+		post.IsDisliked = true
+	}
+
+
+
+	post.Description = post.Description + "\n\n" + appendToTags + "\n\n" + appendToDescHashtags
+	post.Media = mediaToAppend
+
+	return dto.NewPostPreviewDTO(post), nil
+
 }
 
-func NewPostUseCase(postRepository repository.PostRepo) PostUseCase {
-	return &postUseCase{postRepository: postRepository}
+func NewPostUseCase(postRepository repository.PostRepo, repo repository.LikeRepo, favoritesRepo repository.FavoritesRepo, collectionRepo repository.CollectionRepo) PostUseCase {
+	return &postUseCase{
+		postRepository: postRepository,
+		likeRepository: repo,
+		favoriteRepository: favoritesRepo,
+		collectionRepository: collectionRepo,
+	}
 }

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"log"
 	router2 "post-service/http/router"
 	"post-service/infrastructure/cassandra_config"
@@ -18,10 +16,6 @@ func main() {
 	i := interactor.NewInteractor(cassandraSession)
 
 	handler := i.NewAppHandler()
-
-	repo := i.NewPostUseCase()
-	res, err := repo.GenerateUserFeed("424935b1-766c-4f99-b306-9263731518bc", context.Background())
-	fmt.Println(res)
 
 	router := router2.NewRouter(handler)
 

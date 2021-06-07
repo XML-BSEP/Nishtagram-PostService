@@ -11,7 +11,7 @@ import (
 
 func GetAllUserFollowing(ctx context.Context, userId string) ([]domain.Profile, error) {
 	client := resty.New()
-	userDto := dto.UserIdDTO{UserId: userId}
+	userDto := dto.UserIdDTO{Id: userId}
 	resp, _ := client.R().
 		SetBody(userDto).
 		EnableTrace().
