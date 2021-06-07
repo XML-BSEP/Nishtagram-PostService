@@ -6,19 +6,25 @@ import (
 )
 
 type PostDTO struct {
-	Id string
-	Description string
-	Timestamp time.Time
-	NumOfLikes int
-	NumOfDislikes int
-	NumOfComments int
+	Id string `json:"id" validate:"required"`
+	Description string `json:"description" validate:"required"`
+	Timestamp time.Time `json:"time" validate:"required"`
+	NumOfLikes int `json:"numOfLikes" validate:"required"`
+	NumOfDislikes int `json:"numOfDislikes" validate:"required"`
+	NumOfComments int `json:"numOfComments" validate:"required"`
 	Banned bool
-	Profile domain.Profile
-	Location domain.Location
-	Hashtags []domain.Hashtag
-	Tags []domain.Profile
+	Profile domain.Profile `json:"user" validate:"required"`
+	Location string `json:"location" validate:"required"`
+	IsBookmarked bool `json:"isBookmarked" validate:"required"`
+	IsDisliked bool `json:"isDisliked" validate:"required"`
+	IsVideo bool `json:"isVideo" validate:"required"`
+	IsAlbum bool `json:"isAlbum" validate:"required"`
 	Media []string
 	MediaType domain.MediaType
+	Hashtags []string
+	Mentions []string
+	IsLiked bool `json:"isLiked" validate:"required"`
+
 }
 
 func NewPost(id string, desc string, timestamp time.Time, numOfLikes int, numOfDislikes int,
@@ -38,15 +44,15 @@ func NewPost(id string, desc string, timestamp time.Time, numOfLikes int, numOfD
 	return PostDTO{
 		Id: id,
 		Description: desc,
+		Hashtags: hashtags,
+		Mentions: mentions,
 		Timestamp: timestamp,
 		NumOfLikes: numOfLikes,
 		NumOfDislikes: numOfDislikes,
 		NumOfComments: numOfComments,
 		Profile: domain.Profile{Id: profileId},
-		Location: domain.Location{Location: locationName},
+		Location: locationName,
 		MediaType: domain.MediaType{Type: mediaType},
-		Hashtags: hashtagsSlice,
-		Tags: mentionsSlice,
 		Media: media,
 	}
 }

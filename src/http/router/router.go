@@ -34,7 +34,7 @@ func NewRouter(handler handler.AppHandler) *gin.Engine{
 	g.POST("getRejectedReports", handler.GetAllRejectedReports)
 	g.POST("editPost", handler.EditPost)
 	g.POST("deletePost", handler.DeletePost)
-	g.POST("feed", handler.GenerateUserFeed)
+	g.GET("feed", handler.GenerateUserFeed)
 
 	return router
 }

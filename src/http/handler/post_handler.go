@@ -27,14 +27,15 @@ func (p postHandler) GenerateUserFeed(context *gin.Context) {
 		context.Abort()
 		return
 	}
-	posts, err := p.postUseCase.GenerateUserFeed(userId, context)
+
+	posts, err := p.postUseCase.GenerateUserFeed(userId, userId, context)
 	if err != nil {
 		context.JSON(500, gin.H{"message":"server error"})
 		context.Abort()
 		return
 	}
 
-	context.JSON(200, gin.H{"posts" : posts})
+	context.JSON(200, posts)
 
 }
 
@@ -83,7 +84,8 @@ func (p postHandler) DeletePost(context *gin.Context) {
 }
 
 func (p postHandler) GetPostsByUser(context *gin.Context) {
-	var userId string
+	userRequested, err := middleware.ExtractUserId(context.Request)
+	var userId dto.UserTag
 
 	decoder := json.NewDecoder(context.Request.Body)
 
@@ -93,7 +95,7 @@ func (p postHandler) GetPostsByUser(context *gin.Context) {
 		return
 	}
 
-	posts, err := p.postUseCase.GetPostsByUser(userId, context)
+	posts, err := p.postUseCase.GetPostsByUser(userId.UserId, userRequested, context)
 
 	if err != nil {
 		context.JSON(500, "server error")

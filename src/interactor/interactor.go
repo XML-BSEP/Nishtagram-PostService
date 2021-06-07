@@ -39,7 +39,7 @@ type interactor struct {
 }
 
 func (i interactor) NewPostUseCase() usecase.PostUseCase {
-	return usecase.NewPostUseCase(i.NewPostRepo())
+	return usecase.NewPostUseCase(i.NewPostRepo(), i.NewLikeRepo(), i.NewFavoriteRepo(), i.NewCollectionRepo())
 }
 
 func (i interactor) NewReportPostUseCase() usecase.PostReportUseCase {
