@@ -38,6 +38,10 @@ func NewRouter(handler handler.AppHandler) *gin.Engine{
 	g.POST("getAllComments", handler.GetComments)
 	g.POST("getPostsOnProfile", handler.GetPostsOnProfile)
 	g.POST("getPostById", handler.GetPostById)
+	g.GET("getAllCollections", handler.GetAllCollections)
+	g.POST("getPostsInCollection", handler.GetCollection)
+	g.GET("getFavorites", handler.GetFavorites)
+
 
 
 	return router

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gocql/gocql"
+	"time"
 )
 
 const (
@@ -12,6 +13,8 @@ const (
 	InsertFavoriteStatement = "INSERT INTO post_keyspace.Favorites (profile_id, time_of_creation, posts) VALUES (?, ?, ?) IF NOT EXISTS;"
 	GetFavoritesForUser     = "SELECT posts FROM post_keyspace.Favorites WHERE profile_id = ?;"
 	UpdateFavorites         = "UPDATE post_keyspace.Favorites SET posts = ? WHERE profile_id = ?;"
+	SeeIfExists = "SELECT count(*) from post_keyspace.Favorites WHERE profile_id = ?;"
+	GetFavorites = "SELECT posts FROM post_keyspace.Favorites WHERE profile_id = ?;"
 )
 
 type FavoritesRepo interface {
@@ -46,9 +49,19 @@ func (f favoritesRepository) AddPostToFavorites(postId string, profileId string,
 	for iter.Scan(&posts) {
 		posts[postId] = postBy
 	}
+	if len(posts) == 0 {
+		posts = make(map[string]string, 1)
+		posts[postId] = postBy
+	}
 
-	err := f.cassandraSession.Query(UpdateFavorites, posts, profileId).Exec()
-
+	var ifExists int
+	var err error
+	f.cassandraSession.Query(SeeIfExists, profileId).Iter().Scan(&ifExists)
+	if ifExists == 0 {
+		err = f.cassandraSession.Query(InsertFavoriteStatement, profileId, time.Now(), posts).Exec()
+	} else {
+		err = f.cassandraSession.Query(UpdateFavorites, posts, profileId).Exec()
+	}
 	if err != nil {
 		return err
 	}

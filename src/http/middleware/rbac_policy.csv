@@ -24,11 +24,16 @@ p, USER, /post/feed, *
 p, USER, /post/getAllComments, *
 p, USER, /post/getPostsOnProfile, *
 p, USER, /post/getPostById, *
+p, USER, /post/getAllCollections, *
+p, USER, /post/getPostsInCollection, *
+p, USER, /post/getFavorites, *
 p, ANONYMOUS, /post/getPostById, *
 p, ANONYMOUS, /post/getPostsOnProfile, *
 p, ANONYMOUS, /post/getAllComments, *
 p, ANONYMOUS, /post/getPostsByUser, *
 p, ANONYMOUS, /post/getPost, *
+
+
 
 
 

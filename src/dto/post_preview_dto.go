@@ -11,6 +11,7 @@ type PostPreviewDTO struct {
 	Type string
 	UserName string
 	UserSurname string
+	PostBy string `json:"postby"`
 	UserUsername string
 	User domain.Profile `json:"user" validate:"required"`
 	Location string `json:"location" validate:"required"`

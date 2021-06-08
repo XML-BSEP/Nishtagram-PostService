@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"io/ioutil"
 	"os"
+	"post-service/domain"
 	"post-service/dto"
 	"post-service/gateway"
 	"post-service/repository"
@@ -128,6 +129,10 @@ func (p postUseCase) GetPostDTO(postId string, userId string, userRequestedId st
 			}
 		}
 	}
+
+	profile, err := gateway.GetUser(context.Background(), post.Profile.Id)
+	post.Profile = domain.Profile{Id: post.Profile.Id, Username: profile.Username, ProfilePhoto: profile.ProfilePhoto}
+
 	post.Description = post.Description + "\n\n" + appendToTags + "\n\n" + appendToDescHashtags
 	post.Media = mediaToAppend
 
@@ -153,6 +158,12 @@ func (p postUseCase) GetPostsOnProfile(profileId string, userRequested string, c
 
 func (p postUseCase) DecodeBase64(media string, userId string, ctx context.Context) (string, error) {
 	workingDirectory, _ := os.Getwd()
+	if !strings.HasSuffix(workingDirectory, "src") {
+		firstPart := strings.Split(workingDirectory, "src")
+		value := firstPart[0] + "src"
+		workingDirectory = value
+		os.Chdir(workingDirectory)
+	}
 
 	path1 := "./assets/images/"
 	err := os.Chdir(path1)
@@ -251,7 +262,15 @@ func (p postUseCase) GenerateUserFeed(userId string, userRequestedId string, ctx
 				post.IsDisliked = true
 			}
 
+			favorites, err := p.favoriteRepository.GetFavorites(userRequestedId)
+			if _, ok := favorites[post.Id]; ok {
+				post.IsBookmarked = true
+			}
 
+
+
+			profile, err := gateway.GetUser(context.Background(), post.Profile.Id)
+			post.Profile = domain.Profile{Id: post.Profile.Id, Username: profile.Username, ProfilePhoto: profile.ProfilePhoto}
 			post.Description = post.Description + "\n\n" + appendToTags + "\n\n" + appendToDescHashtags
 
 			postsPreview = append(postsPreview, dto.NewPostPreviewDTO(post))
@@ -265,6 +284,12 @@ func (p postUseCase) GenerateUserFeed(userId string, userRequestedId string, ctx
 func (p postUseCase) EncodeBase64(media string, userId string, ctx context.Context) (string, error) {
 
 	workingDirectory, _ := os.Getwd()
+	if !strings.HasSuffix(workingDirectory, "src") {
+		firstPart := strings.Split(workingDirectory, "src")
+		value := firstPart[0] + "src"
+		workingDirectory = value
+		os.Chdir(workingDirectory)
+	}
 	path1 := "./assets/images/"
 	err := os.Chdir(path1)
 	if err != nil {
@@ -423,10 +448,16 @@ func (p postUseCase) GetPost(postId string, userId string, userRequestedId strin
 		post.IsDisliked = true
 	}
 
+	favorites, err := p.favoriteRepository.GetFavorites(userRequestedId)
+	if _, ok := favorites[post.Id]; ok {
+		post.IsBookmarked = true
+	}
+
 
 
 	post.Description = post.Description + "\n\n" + appendToTags + "\n\n" + appendToDescHashtags
 	post.Media = mediaToAppend
+
 
 	return dto.NewPostPreviewDTO(post), nil
 
