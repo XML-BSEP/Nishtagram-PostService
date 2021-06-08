@@ -6,4 +6,5 @@ type PostInDTO struct {
 	PostId string `json:"postid" validate:"required"`
 	IsVideo bool `json:"isVideo" validate:"required"`
 	PostBy string `json:"postby"`
+	NotFollowing bool `json:"notFollowing"`
 }

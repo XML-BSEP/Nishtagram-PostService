@@ -70,16 +70,9 @@ func (f favoritesRepository) AddPostToFavorites(postId string, profileId string,
 }
 
 func (f favoritesRepository) RemovePostFromFavorites(postId string, profileId string, ctx context.Context) error {
-	iter := f.cassandraSession.Query(GetFavoritesForUser, profileId).Iter()
-
-	if iter == nil {
-		return fmt.Errorf("no such element")
-	}
 	var posts map[string]string
-	for iter.Scan(&posts) {
-		delete(posts, postId)
-	}
-
+	f.cassandraSession.Query(GetFavoritesForUser, profileId).Iter().Scan(&posts)
+	delete(posts, postId)
 	err := f.cassandraSession.Query(UpdateFavorites, posts, profileId).Exec()
 
 	if err != nil {

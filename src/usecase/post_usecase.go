@@ -140,6 +140,19 @@ func (p postUseCase) GetPostDTO(postId string, userId string, userRequestedId st
 }
 
 func (p postUseCase) GetPostsOnProfile(profileId string, userRequested string, ctx context.Context) ([]dto.PostInDTO, error) {
+	if profileId != userRequested {
+		userFollowing, _ := gateway.GetAllUserFollowing(context.Background(), userRequested)
+		isOkay := false
+		for  _, u := range userFollowing {
+			if u.Id == profileId {
+				isOkay = true
+				break
+			}
+		}
+		if !isOkay {
+			return nil, fmt.Errorf("oh no i hope i don't fall")
+		}
+	}
 	posts, err := p.GetPostsByUser(profileId, userRequested, context.Background())
 	if err != nil {
 		return nil, err

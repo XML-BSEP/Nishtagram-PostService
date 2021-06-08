@@ -42,7 +42,7 @@ func (f favoriteHandler) RemovePostFromFavorites(context *gin.Context) {
 		context.Abort()
 		return
 	}
-
+	favoriteDTO.UserId, _ = middleware.ExtractUserId(context.Request)
 	err := f.favoriteUseCase.RemovePostFromFavorites(favoriteDTO, context)
 
 	if err != nil {
