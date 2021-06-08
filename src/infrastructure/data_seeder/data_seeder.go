@@ -85,7 +85,9 @@ func SeedFavorites(session *gocql.Session) {
 }
 
 func SeedCollection(session *gocql.Session) {
-	media := [1]string{"4752f49f-3011-44af-9c62-2a6f4086233d"}
+	media := make(map[string]string, 1)
+
+	media["adfee6f4-fe45-40ad-8f8e-760ec861a35e"] = "43420055-3174-4c2a-9823-a8f060d644c3"
 	err := session.Query(repository.InsertCollectionStatement, "1f1280aa-8048-4d5d-a950-ab52752f9672", "e2b5f92e-c31b-11eb-8529-0242ac130003",
 		"Ide Gas", time.Now(), media).Exec()
 	if err !=  nil {

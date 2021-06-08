@@ -2,8 +2,9 @@ package dto
 
 
 type CollectionDTO struct {
-	UserId string `json:"user_id" validate:"required"`
-	PostId string `json:"post_id" validate:"required"`
-	CollectionName string `json:"collection_name" validate:"required"`
+	UserId string `json:"id" validate:"required"`
+	PostId string `json:"postid" validate:"required"`
+	CollectionName string `json:"name" validate:"required"`
+	PostBy string `json:"postby"`
 
 }

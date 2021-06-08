@@ -1,6 +1,6 @@
 {
   "production" : false,
-  "docker": true,
+  "docker": false,
   "server" : {
     "domain_localhost": "127.0.0.1",
     "domain_docker" : "cassandrapost",

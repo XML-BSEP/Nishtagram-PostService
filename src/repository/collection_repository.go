@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"github.com/gocql/gocql"
 	"github.com/google/uuid"
+	"post-service/dto"
 	"time"
 )
 
 const (
-	CreateCollectionTable = "CREATE TABLE if not exists post_keyspace.Collections (id text, profile_id text, name text, time_of_creation timestamp, posts list<text>, " +
+	CreateCollectionTable = "CREATE TABLE if not exists post_keyspace.Collections (id text, profile_id text, name text, time_of_creation timestamp, posts map<text, text>, " +
 		"PRIMARY KEY (profile_id, name));"
 	InsertCollectionStatement = "INSERT INTO post_keyspace.Collections (id, profile_id, name, time_of_creation, posts) VALUES (?, ?, ?, ?, ?) IF NOT EXISTS;"
 	GetCollection = "SELECT posts FROM post_keyspace.Collections WHERE profile_id = ? AND name = ?;"
@@ -20,15 +21,37 @@ const (
 
 type CollectionRepo interface {
 	CreateCollection(userId string, collectionName string, ctx context.Context) error
-	AddPostToCollection(userId string, collectionName string, postId string, ctx context.Context) error
+	AddPostToCollection(userId string, collectionName string, postId string, postBy string, ctx context.Context) error
 	RemovePostFromCollection(userId string, collectionName string, postId string, ctx context.Context) error
 	DeleteCollection(userId string, collectionName string, ctx context.Context) error
-	GetCollection(userId string, collectionName string, ctx context.Context) ([]string, error)
+	GetCollection(userId string, collectionName string, ctx context.Context) (map[string]string, error)
 	GetAllCollectionNames(userId string, ctx context.Context) ([]string, error)
+	GetAllCollections(userId string, ctx context.Context) ([]dto.CollectionDTO, error)
 }
 
 type collectionRepository struct {
 	cassandraSession *gocql.Session
+}
+
+func (c collectionRepository) GetAllCollections(userId string, ctx context.Context) ([]dto.CollectionDTO, error) {
+	iter := c.cassandraSession.Query(GetAllCollectionNames, userId).Iter()
+	if iter == nil {
+		return nil, fmt.Errorf("no collections")
+	}
+
+	var collections []dto.CollectionDTO
+
+	scanner := iter.Scanner()
+	for scanner.Next() {
+		var name string
+		err := scanner.Scan(&name)
+		if err != nil {
+			continue
+		}
+		collections = append(collections, dto.CollectionDTO{CollectionName: name})
+	}
+
+	return collections, nil
 }
 
 func (c collectionRepository) GetAllCollectionNames(userId string, ctx context.Context) ([]string, error) {
@@ -51,8 +74,8 @@ func (c collectionRepository) GetAllCollectionNames(userId string, ctx context.C
 	return collections, nil
 }
 
-func (c collectionRepository) GetCollection(userId string, collectionName string, ctx context.Context) ([]string, error) {
-	var posts []string
+func (c collectionRepository) GetCollection(userId string, collectionName string, ctx context.Context) (map[string]string, error) {
+	var posts map[string]string
 	iter := c.cassandraSession.Query(GetCollection, userId, collectionName).Iter()
 
 	if iter == nil {
@@ -89,8 +112,8 @@ func (c collectionRepository) CreateCollection(userId string, collectionName str
 
 }
 
-func (c collectionRepository) AddPostToCollection(userId string, collectionName string, postId string, ctx context.Context) error {
-	var posts []string
+func (c collectionRepository) AddPostToCollection(userId string, collectionName string, postId string, postBy string, ctx context.Context) error {
+	var posts map[string]string
 
 	iter := c.cassandraSession.Query(GetCollection, userId, collectionName).Iter()
 
@@ -99,7 +122,7 @@ func (c collectionRepository) AddPostToCollection(userId string, collectionName 
 	}
 
 	for iter.Scan(&posts) {
-		posts = append(posts, postId)
+		posts[postId] = postBy
 	}
 
 	err := c.cassandraSession.Query(UpdateCollection, posts, userId, collectionName).Exec()
@@ -113,16 +136,21 @@ func (c collectionRepository) AddPostToCollection(userId string, collectionName 
 
 
 func (c collectionRepository) RemovePostFromCollection(userId string, collectionName string, postId string, ctx context.Context) error {
-	var posts []string
+	var posts map[string]string
 
 	iter := c.cassandraSession.Query(GetCollection, userId, collectionName).Iter()
 
 	if iter == nil {
 		return fmt.Errorf("error while saving post to collection")
 	}
-
+	var newPosts map[string]string
 	for iter.Scan(&posts) {
-		posts = remove(posts, postId)
+		for s := range posts {
+			if s == postId {
+				continue
+			}
+			newPosts[s] = posts[s]
+		}
 	}
 
 	err := c.cassandraSession.Query(UpdateCollection, posts, userId, collectionName).Exec()

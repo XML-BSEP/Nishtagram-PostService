@@ -55,11 +55,11 @@ func (i interactor) NewCommentUseCase() usecase.CommentUseCase {
 }
 
 func (i interactor) NewFavoriteUseCase() usecase.FavoriteUseCase {
-	return usecase.NewFavoriteUseCase(i.NewFavoriteRepo(), i.NewPostRepo())
+	return usecase.NewFavoriteUseCase(i.NewFavoriteRepo(), i.NewPostRepo(), i.NewPostUseCase())
 }
 
 func (i interactor) NewCollectionUseCase() usecase.CollectionUseCase {
-	return usecase.NewCollectionUseCase(i.NewCollectionRepo(), i.NewPostRepo())
+	return usecase.NewCollectionUseCase(i.NewCollectionRepo(), i.NewPostRepo(), i.NewPostUseCase())
 }
 
 func (i interactor) NewReportPostHandler() handler.ReportPostHandler {

@@ -59,7 +59,7 @@ func (p postHandler) GetPostsOnProfile(ctx *gin.Context) {
 
 	userRequested, _ := middleware.ExtractUserId(ctx.Request)
 
-	posts, err := p.postUseCase.GetPostsOnProfile(userRequested, userRequested, context.Background())
+	posts, err := p.postUseCase.GetPostsOnProfile(userDTO.Id, userRequested, context.Background())
 
 	if err != nil {
 		ctx.JSON(500, gin.H{"message":"server error"})

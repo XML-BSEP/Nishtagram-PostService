@@ -9,45 +9,43 @@ import (
 type FavoriteUseCase interface {
 	AddPostToFavorites(favoriteDTO dto.FavoriteDTO, ctx context.Context) error
 	RemovePostFromFavorites(favoriteDTO dto.FavoriteDTO, ctx context.Context) error
-	GetFavoritesForUser(userId string, ctx context.Context) (dto.ShowFavoritePostsDTO, error)
+	GetFavoritesForUser(userId string, ctx context.Context) ([]dto.PostInDTO, error)
 }
 
 type favoriteUseCase struct {
 	favoriteRepository repository.FavoritesRepo
 	postRepository repository.PostRepo
+	postUseCase PostUseCase
 }
 
-func (f favoriteUseCase) GetFavoritesForUser(userId string, ctx context.Context) (dto.ShowFavoritePostsDTO, error) {
+func (f favoriteUseCase) GetFavoritesForUser(userId string, ctx context.Context) ([]dto.PostInDTO, error) {
 	favorites, err := f.favoriteRepository.GetFavorites(userId)
 	if err != nil {
-		return dto.NewShowFavoriteNoParamsDTO(), err
+		return nil, err
 	}
 
-	var posts []dto.PostDTO
+	var posts string
 	var bannedPosts []string
-
+	var retVal []dto.PostInDTO
 	for favorite := range favorites {
 		if f.postRepository.SeeIfPostDeletedOrBanned(favorite, favorites[favorite], context.Background()) {
 			bannedPosts = append(bannedPosts, favorite)
 			continue
 		}
-		post, err := f.postRepository.GetPostsById(favorites[favorite], favorite, context.Background())
+		post, err := f.postUseCase.GetPost( favorite, favorites[favorite], userId, context.Background())
 		if err != nil {
 			continue
 		}
-		posts = append(posts, post)
+		posts = post.Media[0]
+		retVal = append(retVal, dto.PostInDTO{User: favorites[favorite], Posts: posts, PostBy: favorites[favorite], PostId: favorite})
 	}
 
 	for _, s := range bannedPosts {
 		err = f.favoriteRepository.RemovePostFromFavorites(s, favorites[s], context.Background())
 	}
 
-	var postsPreview []dto.PostPreviewDTO
-	for _, post := range posts {
-		postsPreview = append(postsPreview, dto.NewPostPreviewDTO(post))
-	}
 
-	return dto.NewShowFavoritePostsDTO(userId, postsPreview), nil
+	return retVal, nil
 
 }
 
@@ -59,6 +57,6 @@ func (f favoriteUseCase) RemovePostFromFavorites(favoriteDTO dto.FavoriteDTO, ct
 	return f.favoriteRepository.RemovePostFromFavorites(favoriteDTO.PostId, favoriteDTO.UserId, context.Background())
 }
 
-func NewFavoriteUseCase(favoritesRepository repository.FavoritesRepo, postRepository repository.PostRepo) FavoriteUseCase {
-	return &favoriteUseCase{favoriteRepository: favoritesRepository, postRepository: postRepository}
+func NewFavoriteUseCase(favoritesRepository repository.FavoritesRepo, postRepository repository.PostRepo, useCase PostUseCase) FavoriteUseCase {
+	return &favoriteUseCase{favoriteRepository: favoritesRepository, postRepository: postRepository, postUseCase: useCase}
 }

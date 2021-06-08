@@ -1,9 +1,9 @@
 package dto
 
 type FavoriteDTO struct {
-	PostId string `json:"post_id" validate:"required"`
-	UserId string `json:"post_id" validate:"required"`
-	PostBy string `json:"post_id" validate:"required"`
+	PostId string `json:"postid" validate:"required"`
+	UserId string `json:"userid" validate:"required"`
+	PostBy string `json:"postby" validate:"required"`
 
 
 }
