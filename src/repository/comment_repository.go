@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/gocql/gocql"
 	"github.com/google/uuid"
+	logger "github.com/jelena-vlajkov/logger/logger"
 	"post-service/domain"
 	"post-service/dto"
 	"time"
@@ -23,6 +24,7 @@ type CommentRepo interface {
 
 type commentRepository struct {
 	cassandraSession *gocql.Session
+	logger *logger.Logger
 }
 
 func (c commentRepository) GetComments(postId string, ctx context.Context) ([]dto.CommentDTO, error) {
@@ -54,6 +56,7 @@ func (c commentRepository) CommentPost(comment dto.CommentDTO, ctx context.Conte
 	err := c.cassandraSession.Query(InsertComment, id, comment.Comment, comment.PostId, comment.CommentBy.Id, time.Now(), mentions).Exec()
 
 	if err != nil {
+		c.logger.Logger.Errorf("error while adding comment on post %v by user %v, error: %v\n", comment.PostId, comment.PostBy, err)
 		return err
 	}
 
@@ -68,15 +71,17 @@ func (c commentRepository) CommentPost(comment dto.CommentDTO, ctx context.Conte
 func (c commentRepository) DeleteComment(comment dto.CommentDTO, ctx context.Context) error {
 	err := c.cassandraSession.Query(DeletePost, comment.PostId, comment.CommentBy).Exec()
 	if err != nil {
+		c.logger.Logger.Errorf("error while deleting comment on post %v with id %v, error: %v\n", comment.PostId, comment.PostId, err)
 		return err
 	}
 
 	return nil
 }
 
-func NewCommentRepository(cassandraSession *gocql.Session) CommentRepo {
+func NewCommentRepository(cassandraSession *gocql.Session, logger *logger.Logger) CommentRepo {
 	var c = &commentRepository{
 		cassandraSession: cassandraSession,
+		logger: logger,
 	}
 	err := c.cassandraSession.Query(CreateCommentTable).Exec()
 	if err != nil {

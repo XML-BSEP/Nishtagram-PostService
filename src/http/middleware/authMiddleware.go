@@ -5,38 +5,39 @@ import (
 	"github.com/casbin/casbin/v2"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"log"
+	logger "github.com/jelena-vlajkov/logger/logger"
 	"net/http"
 	"os"
 	"strings"
 )
 
-func AuthMiddleware() gin.HandlerFunc {
+func AuthMiddleware(logger *logger.Logger) gin.HandlerFunc {
 	return func (c *gin.Context) {
-		role, err := ExtractRole(c.Request)
+		role, err := ExtractRole(c.Request, logger)
 		if err != nil {
+			logger.Logger.Errorf("unauthorized request from IP address: %v", c.Request.Host)
 			c.JSON(401, gin.H{"message" : "Unauthorized"})
 			c.Abort()
 			return
 		}
 
 		if role == "" {
+			logger.Logger.Errorf("unauthorized request from IP address: %v", c.Request.Host)
 			c.JSON(401, gin.H{"message" : "Unauthorized"})
 			c.Abort()
 			return
 		}
 
-		ok, err := enforce(role, c.Request.URL.Path, c.Request.Method)
+		ok, err := enforce(role, c.Request.URL.Path, c.Request.Method, logger)
 
 		if err != nil {
-			log.Println(err)
 			c.JSON(500, gin.H{"message" : "error occurred when authorizing user"})
 			c.Abort()
 			return
 		}
 
 		if !ok {
-			log.Println(err)
+			logger.Logger.Errorf("forbidden request from IP address: %v", c.Request.Host)
 			c.JSON(403, gin.H{"message" : "forbidden"})
 			c.Abort()
 			return
@@ -46,13 +47,15 @@ func AuthMiddleware() gin.HandlerFunc {
 	}
 
 
-func enforce(role string, obj string, act string) (bool, error) {
+func enforce(role string, obj string, act string, logger *logger.Logger) (bool, error) {
 	enforcer, err := casbin.NewEnforcer("http/middleware/rbac_model.conf", "http/middleware/rbac_policy.csv")
 	if err != nil {
+		logger.Logger.Errorf("failed to load policy from file: %v", err)
 		return false, fmt.Errorf("failed to load policy from DB: %w", err)
 	}
 	err = enforcer.LoadPolicy()
 	if err != nil {
+		logger.Logger.Errorf("failed to load policy from file: %v", err)
 		return false, fmt.Errorf("failed to load policy from DB: %w", err)
 	}
 	ok, _ := enforcer.Enforce(role, obj, act)
@@ -76,7 +79,7 @@ func ExtractToken(r *http.Request) string {
 	return ""
 }
 
-func ExtractRole(r *http.Request) (string, error) {
+func ExtractRole(r *http.Request, logger *logger.Logger) (string, error) {
 	tokenString := ExtractToken(r)
 	if tokenString == "" {
 		return "ANONYMOUS", nil
@@ -86,16 +89,14 @@ func ExtractRole(r *http.Request) (string, error) {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(os.Getenv("ACCESS_SECRET")), nil
-	})/*
-	if err != nil {
-		return "", err
-	}*/
+	})
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 
 	if ok  {
 		role, ok := claims["role"].(string)
 		if !ok {
+			logger.Logger.Error("error while reading role from token")
 			return "", err
 		}
 
@@ -104,7 +105,7 @@ func ExtractRole(r *http.Request) (string, error) {
 	return "", err
 }
 
-func ExtractUserId(r *http.Request) (string, error) {
+func ExtractUserId(r *http.Request, logger *logger.Logger) (string, error) {
 	tokenString := ExtractToken(r)
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -116,6 +117,7 @@ func ExtractUserId(r *http.Request) (string, error) {
 	if ok  {
 		userId, ok := claims["user_id"].(string)
 		if !ok {
+			logger.Logger.Error("error while reading user id from token")
 			return "", err
 		}
 

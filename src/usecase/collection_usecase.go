@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	logger "github.com/jelena-vlajkov/logger/logger"
 	"post-service/dto"
 	"post-service/repository"
 )
@@ -20,9 +21,11 @@ type collectionUseCase struct {
 	collectionRepository repository.CollectionRepo
 	postRepository repository.PostRepo
 	postUseCase PostUseCase
+	logger *logger.Logger
 }
 
 func (c collectionUseCase) GetAllCollectionsPerUser(userId string, ctx context.Context) ([]dto.CollectionDTO, error) {
+	c.logger.Logger.Infof("getting all collection for user %v\n", userId)
 	var retVal []dto.CollectionDTO
 
 	collections, err :=  c.collectionRepository.GetAllCollectionNames(userId, context.Background())
@@ -38,6 +41,7 @@ func (c collectionUseCase) GetAllCollectionsPerUser(userId string, ctx context.C
 }
 
 func (c collectionUseCase) GetCollection(userId string, collectionName string, ctx context.Context) (dto.PreviewCollectionDTO, error) {
+	c.logger.Logger.Infof("getting collection with name %v for user %v\n", collectionName, userId)
 	posts, err := c.collectionRepository.GetCollection(userId, collectionName, context.Background())
 	if err != nil {
 		return dto.NewPreviewCollectionDTO(), err
@@ -60,7 +64,7 @@ func (c collectionUseCase) GetCollection(userId string, collectionName string, c
 			continue
 		}
 		postsPreview = append(postsPreview, post)
-		isVideo := false;
+		isVideo := false
 		if post.Type == "VIDEO" {
 			isVideo = true
 		}
@@ -75,21 +79,25 @@ func (c collectionUseCase) GetCollection(userId string, collectionName string, c
 }
 
 func (c collectionUseCase) DeleteCollection(collectionDTO dto.CollectionDTO, ctx context.Context) error {
+	c.logger.Logger.Infof("deleting collection with name %v for user %v\n", collectionDTO.CollectionName, collectionDTO.UserId)
 	return c.collectionRepository.DeleteCollection(collectionDTO.UserId, collectionDTO.CollectionName, context.Background())
 }
 
 func (c collectionUseCase) CreateCollection(collectionDTO dto.CollectionDTO, ctx context.Context) error {
+	c.logger.Logger.Infof("creating collection with name %v for user %v\n", collectionDTO.CollectionName, collectionDTO.UserId)
 	return c.collectionRepository.CreateCollection(collectionDTO.UserId, collectionDTO.CollectionName, context.Background())
 }
 
 func (c collectionUseCase) AddPostToCollection(collectionDTO dto.CollectionDTO, ctx context.Context) error {
+	c.logger.Logger.Infof("adding post %v to collection with name %v for user %v\n", collectionDTO.PostId, collectionDTO.CollectionName, collectionDTO.UserId)
 	return c.collectionRepository.AddPostToCollection(collectionDTO.UserId, collectionDTO.CollectionName, collectionDTO.PostId, collectionDTO.PostBy, context.Background())
 }
 
 func (c collectionUseCase) RemovePostFromCollection(collectionDTO dto.CollectionDTO, ctx context.Context) error {
+	c.logger.Logger.Infof("removing post %v from collection with name %v for user %v\n", collectionDTO.PostId, collectionDTO.CollectionName, collectionDTO.UserId)
 	return c.collectionRepository.RemovePostFromCollection(collectionDTO.UserId, collectionDTO.CollectionName, collectionDTO.PostId, context.Background())
 }
 
-func NewCollectionUseCase(collectionRepository repository.CollectionRepo, postRepository repository.PostRepo, useCase PostUseCase ) CollectionUseCase {
-	return &collectionUseCase{collectionRepository: collectionRepository, postRepository: postRepository, postUseCase: useCase}
+func NewCollectionUseCase(collectionRepository repository.CollectionRepo, postRepository repository.PostRepo, useCase PostUseCase, logger *logger.Logger ) CollectionUseCase {
+	return &collectionUseCase{collectionRepository: collectionRepository, postRepository: postRepository, postUseCase: useCase, logger: logger}
 }

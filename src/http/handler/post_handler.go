@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	logger "github.com/jelena-vlajkov/logger/logger"
 	"post-service/domain"
 	"post-service/dto"
 	"post-service/http/middleware"
@@ -22,18 +23,21 @@ type PostHandler interface {
 
 type postHandler struct {
 	postUseCase usecase.PostUseCase
+	logger *logger.Logger
 }
 
 func (p postHandler) GetPostById(ctx *gin.Context) {
+	p.logger.Logger.Println("Handling GETTING POST BY ID")
 	var postDTO dto.GetPostDTO
 	decoder := json.NewDecoder(ctx.Request.Body)
 
 	if err := decoder.Decode(&postDTO); err != nil {
+		p.logger.Logger.Errorf("error while decoding json, error: %v\n", err)
 		ctx.JSON(400, "invalid request")
 		ctx.Abort()
 		return
 	}
-	userRequested, _ := middleware.ExtractUserId(ctx.Request)
+	userRequested, _ := middleware.ExtractUserId(ctx.Request, p.logger)
 
 	post, err := p.postUseCase.GetPost(postDTO.PostId, postDTO.UserId, userRequested, context.Background())
 	if err != nil {
@@ -48,16 +52,18 @@ func (p postHandler) GetPostById(ctx *gin.Context) {
 }
 
 func (p postHandler) GetPostsOnProfile(ctx *gin.Context) {
+	p.logger.Logger.Println("Handling GETTING POSTS ON PROFILE")
 	var userDTO domain.Profile
 	decoder := json.NewDecoder(ctx.Request.Body)
 
 	if err := decoder.Decode(&userDTO); err != nil {
+		p.logger.Logger.Errorf("error while decoding json, error: %v\n", err)
 		ctx.JSON(400, "invalid request")
 		ctx.Abort()
 		return
 	}
 
-	userRequested, _ := middleware.ExtractUserId(ctx.Request)
+	userRequested, _ := middleware.ExtractUserId(ctx.Request, p.logger)
 
 	posts, err := p.postUseCase.GetPostsOnProfile(userDTO.Id, userRequested, context.Background())
 
@@ -72,8 +78,10 @@ func (p postHandler) GetPostsOnProfile(ctx *gin.Context) {
 }
 
 func (p postHandler) GenerateUserFeed(context *gin.Context) {
-	userId, err := middleware.ExtractUserId(context.Request)
+	p.logger.Logger.Println("Handling GENERATING USER FEED")
+	userId, err := middleware.ExtractUserId(context.Request, p.logger)
 	if err != nil {
+		p.logger.Logger.Errorf("error while decoding json, error: %v\n", err)
 		context.JSON(500, gin.H{"message":"server error"})
 		context.Abort()
 		return
@@ -91,11 +99,13 @@ func (p postHandler) GenerateUserFeed(context *gin.Context) {
 }
 
 func (p postHandler) EditPost(context *gin.Context) {
+	p.logger.Logger.Println("Handling EDITING POST")
 	var updatePostDTO dto.UpdatePostDTO
 
 	decoder := json.NewDecoder(context.Request.Body)
 
 	if err := decoder.Decode(&updatePostDTO); err != nil {
+		p.logger.Logger.Errorf("error while decoding json, error: %v\n", err)
 		context.JSON(400, "invalid request")
 		context.Abort()
 		return
@@ -113,11 +123,13 @@ func (p postHandler) EditPost(context *gin.Context) {
 }
 
 func (p postHandler) DeletePost(context *gin.Context) {
+	p.logger.Logger.Println("Handling DELETING POST")
 	var deletePostDTO dto.DeletePostDTO
 
 	decoder := json.NewDecoder(context.Request.Body)
 
 	if err := decoder.Decode(&deletePostDTO); err != nil {
+		p.logger.Logger.Errorf("error while decoding json, error: %v\n", err)
 		context.JSON(400, "invalid request")
 		context.Abort()
 		return
@@ -135,12 +147,14 @@ func (p postHandler) DeletePost(context *gin.Context) {
 }
 
 func (p postHandler) GetPostsByUser(context *gin.Context) {
-	userRequested, err := middleware.ExtractUserId(context.Request)
+	p.logger.Logger.Println("Handling GETTING POSTS BY USER")
+	userRequested, err := middleware.ExtractUserId(context.Request, p.logger)
 	var userId dto.UserTag
 
 	decoder := json.NewDecoder(context.Request.Body)
 
 	if err := decoder.Decode(&userId); err != nil {
+		p.logger.Logger.Errorf("error while decoding json, error: %v\n", err)
 		context.JSON(400, "invalid request")
 		context.Abort()
 		return
@@ -158,16 +172,18 @@ func (p postHandler) GetPostsByUser(context *gin.Context) {
 }
 
 func (p postHandler) AddPost(context *gin.Context) {
+	p.logger.Logger.Println("Handling ADDING POST")
 	var createPostDTO dto.CreatePostDTO
 
 	decoder := json.NewDecoder(context.Request.Body)
 
 	if err := decoder.Decode(&createPostDTO); err != nil {
+		p.logger.Logger.Errorf("error while decoding json, error: %v\n", err)
 		context.JSON(400, "invalid request")
 		context.Abort()
 		return
 	}
-	createPostDTO.UserId.UserId, _ = middleware.ExtractUserId(context.Request)
+	createPostDTO.UserId.UserId, _ = middleware.ExtractUserId(context.Request, p.logger)
 	err := p.postUseCase.AddPost(createPostDTO, context)
 
 	if err != nil {
@@ -180,6 +196,6 @@ func (p postHandler) AddPost(context *gin.Context) {
 }
 
 
-func NewPostHandler(postUseCase usecase.PostUseCase) PostHandler {
-	return &postHandler{postUseCase: postUseCase}
+func NewPostHandler(postUseCase usecase.PostUseCase, logger *logger.Logger) PostHandler {
+	return &postHandler{postUseCase: postUseCase, logger: logger}
 }

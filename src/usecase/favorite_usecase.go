@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	logger "github.com/jelena-vlajkov/logger/logger"
 	"post-service/dto"
 	"post-service/repository"
 )
@@ -16,9 +17,12 @@ type favoriteUseCase struct {
 	favoriteRepository repository.FavoritesRepo
 	postRepository repository.PostRepo
 	postUseCase PostUseCase
+	logger *logger.Logger
+
 }
 
 func (f favoriteUseCase) GetFavoritesForUser(userId string, ctx context.Context) ([]dto.PostInDTO, error) {
+	f.logger.Logger.Infof("getting favorite posts for user %v\n", userId)
 	favorites, err := f.favoriteRepository.GetFavorites(userId)
 	if err != nil {
 		return nil, err
@@ -42,21 +46,24 @@ func (f favoriteUseCase) GetFavoritesForUser(userId string, ctx context.Context)
 
 	for _, s := range bannedPosts {
 		err = f.favoriteRepository.RemovePostFromFavorites(s, favorites[s], context.Background())
+		f.logger.Logger.Errorf("error while deleting banned posts from favorites for %v, for post id %v, error: %v\n", userId, s, err)
 	}
-
 
 	return retVal, nil
 
 }
 
 func (f favoriteUseCase) AddPostToFavorites(favoriteDTO dto.FavoriteDTO, ctx context.Context) error {
+	f.logger.Logger.Infof("adding post %v to favorites for user %v\n", favoriteDTO.PostId, favoriteDTO.UserId)
 	return f.favoriteRepository.AddPostToFavorites(favoriteDTO.PostId, favoriteDTO.UserId, favoriteDTO.PostBy, context.Background())
 }
 
 func (f favoriteUseCase) RemovePostFromFavorites(favoriteDTO dto.FavoriteDTO, ctx context.Context) error {
+	f.logger.Logger.Infof("removing post %v from favorites for user %v\n", favoriteDTO.PostId, favoriteDTO.UserId)
 	return f.favoriteRepository.RemovePostFromFavorites(favoriteDTO.PostId, favoriteDTO.UserId, context.Background())
+
 }
 
-func NewFavoriteUseCase(favoritesRepository repository.FavoritesRepo, postRepository repository.PostRepo, useCase PostUseCase) FavoriteUseCase {
-	return &favoriteUseCase{favoriteRepository: favoritesRepository, postRepository: postRepository, postUseCase: useCase}
+func NewFavoriteUseCase(favoritesRepository repository.FavoritesRepo, postRepository repository.PostRepo, useCase PostUseCase, logger *logger.Logger) FavoriteUseCase {
+	return &favoriteUseCase{favoriteRepository: favoritesRepository, postRepository: postRepository, postUseCase: useCase, logger: logger}
 }

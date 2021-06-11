@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"github.com/gocql/gocql"
+	logger "github.com/jelena-vlajkov/logger/logger"
 	"post-service/domain"
 	"time"
 )
@@ -35,6 +36,7 @@ type LikeRepo interface {
 
 type likeRepository struct {
 	cassandraSession *gocql.Session
+	logger *logger.Logger
 }
 
 func (l likeRepository) SeeIfLikeExists(postId string, profileId string, ctx context.Context) bool {
@@ -94,6 +96,7 @@ func (l likeRepository) LikePost(postId string, postBy string, profile domain.Pr
 
 
 	if err != nil {
+		l.logger.Logger.Errorf("error while ading like for user %v on post %v, error: %v\n", profile.Id, postId, err)
 		return err
 	}
 
@@ -114,6 +117,7 @@ func (l likeRepository) DislikePost(postId string, postBy string, profile domain
 	err = l.cassandraSession.Query(AddDislikeToPost, numOfDislikes, postId, postBy).Exec()
 
 	if err != nil {
+		l.logger.Logger.Errorf("error while removing dislike for user %v on post %v, error: %v\n", profile.Id, postId, err)
 		return err
 	}
 
@@ -135,6 +139,7 @@ func (l likeRepository) RemoveLike(postId string, postBy string, profile domain.
 	err = l.cassandraSession.Query(RemoveLikeFromPost, numOfLikes, postId, postBy).Exec()
 
 	if err != nil {
+		l.logger.Logger.Errorf("error while removing like for user %v on post %v, error %v\n", profile.Id, postId, err)
 		return err
 	}
 
@@ -156,15 +161,17 @@ func (l likeRepository) RemoveDislike(postId string, postBy string, profile doma
 	err = l.cassandraSession.Query(RemoveLikeFromPost, numOfDislikes, postId, postBy).Exec()
 
 	if err != nil {
+		l.logger.Logger.Errorf("error while removing dislike for user %v on post %v, error %v\n", profile.Id, postId, err)
 		return err
 	}
 
 	return nil
 }
 
-func NewLikeRepository(cassandraSession *gocql.Session) LikeRepo {
+func NewLikeRepository(cassandraSession *gocql.Session, logger *logger.Logger) LikeRepo {
 	var l =  &likeRepository{
 		cassandraSession : cassandraSession,
+		logger: logger,
 	}
 	err := l.cassandraSession.Query(CreateLikeTable).Exec()
 	if err != nil {

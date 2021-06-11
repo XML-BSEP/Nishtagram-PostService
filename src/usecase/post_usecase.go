@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/google/uuid"
+	logger "github.com/jelena-vlajkov/logger/logger"
 	"io/ioutil"
 	"os"
 	"post-service/domain"
@@ -34,9 +35,11 @@ type postUseCase struct {
 	likeRepository repository.LikeRepo
 	collectionRepository repository.CollectionRepo
 	favoriteRepository repository.FavoritesRepo
+	logger *logger.Logger
 }
 
 func (p postUseCase) GetPostDTO(postId string, userId string, userRequestedId string, ctx context.Context) (dto.PostDTO, error) {
+	p.logger.Logger.Infof("getting post %v by user %v\n", postId, userId)
 	post, err := p.postRepository.GetPostsById(userId, postId, context.Background())
 	if err != nil {
 		return dto.PostDTO{}, err
@@ -130,7 +133,11 @@ func (p postUseCase) GetPostDTO(postId string, userId string, userRequestedId st
 		}
 	}
 
+	p.logger.Logger.Infof("getting user info for %v from user ms\n", userId)
 	profile, err := gateway.GetUser(context.Background(), post.Profile.Id)
+	if err != nil {
+		p.logger.Logger.Errorf("error while getting info for %v from user ms, error: %v\n", userId, err)
+	}
 	post.Profile = domain.Profile{Id: post.Profile.Id, Username: profile.Username, ProfilePhoto: profile.ProfilePhoto}
 
 	post.Description = post.Description + "\n\n" + appendToTags + "\n\n" + appendToDescHashtags
@@ -140,6 +147,7 @@ func (p postUseCase) GetPostDTO(postId string, userId string, userRequestedId st
 }
 
 func (p postUseCase) GetPostsOnProfile(profileId string, userRequested string, ctx context.Context) ([]dto.PostInDTO, error) {
+	p.logger.Logger.Infof("getting posts on user profile with id %v\n", profileId)
 	if profileId != userRequested {
 		userFollowing, _ := gateway.GetAllUserFollowing(context.Background(), userRequested)
 		isOkay := false
@@ -150,9 +158,12 @@ func (p postUseCase) GetPostsOnProfile(profileId string, userRequested string, c
 			}
 		}
 		if !isOkay {
+			p.logger.Logger.Errorf("user %v does not follow user %v\n", userRequested, profileId)
 			return nil, fmt.Errorf("oh no i hope i don't fall")
 		}
 	}
+
+	p.logger.Logger.Infof("getting all posts for user %v\n", profileId)
 	posts, err := p.GetPostsByUser(profileId, userRequested, context.Background())
 	if err != nil {
 		return nil, err
@@ -170,6 +181,7 @@ func (p postUseCase) GetPostsOnProfile(profileId string, userRequested string, c
 }
 
 func (p postUseCase) DecodeBase64(media string, userId string, ctx context.Context) (string, error) {
+	p.logger.Logger.Infof("decoding base64 for image %v and user %v\n", media, userId)
 	workingDirectory, _ := os.Getwd()
 	if !strings.HasSuffix(workingDirectory, "src") {
 		firstPart := strings.Split(workingDirectory, "src")
@@ -190,15 +202,10 @@ func (p postUseCase) DecodeBase64(media string, userId string, ctx context.Conte
 		f, _ = os.Open(spliced[0])
 	}
 
-
-
-
 	reader := bufio.NewReader(f)
 	content, _ := ioutil.ReadAll(reader)
 
-
 	encoded := base64.StdEncoding.EncodeToString(content)
-
 
 	fmt.Println("ENCODED: " + encoded)
 	os.Chdir(workingDirectory)
@@ -207,9 +214,11 @@ func (p postUseCase) DecodeBase64(media string, userId string, ctx context.Conte
 }
 
 func (p postUseCase) GenerateUserFeed(userId string, userRequestedId string, ctx context.Context) ([]dto.PostPreviewDTO, error) {
+	p.logger.Logger.Infof("generating user feed for user %v\n", userId)
+	p.logger.Logger.Infof("getting all user followings for user %v from follow ms\n", userId)
 	userFollowing, err := gateway.GetAllUserFollowing(context.Background(), userRequestedId)
 	if err != nil {
-		fmt.Println(err)
+		p.logger.Logger.Errorf("error while getting all followings for user %v from follow ms, error: %v\n", userId, err)
 		return nil, err
 	}
 
@@ -228,6 +237,7 @@ func (p postUseCase) GenerateUserFeed(userId string, userRequestedId string, ctx
 		for _, postById := range postsToShow[idFollowing] {
 			post, err := p.postRepository.GetPostsById(idFollowing, postById, context.Background())
 			if err != nil {
+				p.logger.Logger.Errorf("error while getting post %v by user %v, error: %v\n", idFollowing, postById, err)
 				continue
 			}
 			var mediaToAppend []string
@@ -283,6 +293,9 @@ func (p postUseCase) GenerateUserFeed(userId string, userRequestedId string, ctx
 
 
 			profile, err := gateway.GetUser(context.Background(), post.Profile.Id)
+			if err != nil {
+				p.logger.Logger.Errorf("error while getting user info for %v, error: %v\n", post.Profile.Id, err)
+			}
 			post.Profile = domain.Profile{Id: post.Profile.Id, Username: profile.Username, ProfilePhoto: profile.ProfilePhoto}
 			post.Description = post.Description + "\n\n" + appendToTags + "\n\n" + appendToDescHashtags
 
@@ -295,7 +308,7 @@ func (p postUseCase) GenerateUserFeed(userId string, userRequestedId string, ctx
 }
 
 func (p postUseCase) EncodeBase64(media string, userId string, ctx context.Context) (string, error) {
-
+	p.logger.Logger.Infof("encoding base64 image for userId %v\n", userId)
 	workingDirectory, _ := os.Getwd()
 	if !strings.HasSuffix(workingDirectory, "src") {
 		firstPart := strings.Split(workingDirectory, "src")
@@ -306,7 +319,7 @@ func (p postUseCase) EncodeBase64(media string, userId string, ctx context.Conte
 	path1 := "./assets/images/"
 	err := os.Chdir(path1)
 	if err != nil {
-		fmt.Println(err)
+		p.logger.Logger.Errorf("error while encoding base64 image for userId %v, error: %v\n", userId, err)
 	}
 	err = os.Mkdir(userId, 0755)
 	fmt.Println(err)
@@ -322,22 +335,22 @@ func (p postUseCase) EncodeBase64(media string, userId string, ctx context.Conte
 	dec, err := base64.StdEncoding.DecodeString(s[1])
 
 	if err != nil {
-		panic(err)
+		p.logger.Logger.Errorf("error while encoding base64 image for userId %v, error: %v\n", userId, err)
 	}
 	uuid := uuid.NewString()
 	f, err := os.Create(uuid + "." + format[0])
 
 	if err != nil {
-		panic(err)
+		p.logger.Logger.Errorf("error while encoding base64 image for userId %v, error: %v\n", userId, err)
 	}
 
 	defer f.Close()
 
 	if _, err := f.Write(dec); err != nil {
-		panic(err)
+		p.logger.Logger.Errorf("error while encoding base64 image for userId %v, error: %v\n", userId, err)
 	}
 	if err := f.Sync(); err != nil {
-		panic(err)
+		p.logger.Logger.Errorf("error while encoding base64 image for userId %v, error: %v\n", userId, err)
 	}
 
 	os.Chdir(workingDirectory)
@@ -346,6 +359,7 @@ func (p postUseCase) EncodeBase64(media string, userId string, ctx context.Conte
 
 
 func (p postUseCase) AddPost(postDTO dto.CreatePostDTO, ctx context.Context) error {
+	p.logger.Logger.Infof("adding post for user %v\n", postDTO.UserId)
 	var media []string
 
 	if postDTO.IsImage  {
@@ -385,14 +399,19 @@ func (p postUseCase) AddPost(postDTO dto.CreatePostDTO, ctx context.Context) err
 }
 
 func (p postUseCase) DeletePost(postDTO dto.DeletePostDTO, ctx context.Context) error {
+	p.logger.Logger.Infof("deleting post with id %v for user %v\n", postDTO.PostId, postDTO.PostId)
 	return p.postRepository.DeletePost(postDTO, context.Background())
+
 }
 
 func (p postUseCase) EditPost(postDTO dto.UpdatePostDTO, ctx context.Context) error {
+	p.logger.Logger.Infof("editing post with id %v for user %v\n", postDTO.PostId, postDTO.UserId)
 	return p.postRepository.EditPost(postDTO, context.Background())
+
 }
 
 func (p postUseCase) GetPostsByUser(userId string, userRequestedId string, ctx context.Context) ([]dto.PostDTO, error) {
+	p.logger.Logger.Infof("getting posts for user %v\n", userId)
 	posts, err := p.postRepository.GetPostsByUserId(userId, context.Background())
 	var retVal []dto.PostDTO
 
@@ -412,6 +431,7 @@ func (p postUseCase) GetPostsByUser(userId string, userRequestedId string, ctx c
 }
 
 func (p postUseCase) GetPost(postId string, userId string, userRequestedId string, ctx context.Context) (dto.PostPreviewDTO, error) {
+	p.logger.Logger.Infof("getting post with id %v by user %v\n", postId, userId)
 	post, err := p.postRepository.GetPostsById(userId, postId, context.Background())
 	if err != nil {
 		return dto.PostPreviewDTO{}, err
@@ -476,11 +496,12 @@ func (p postUseCase) GetPost(postId string, userId string, userRequestedId strin
 
 }
 
-func NewPostUseCase(postRepository repository.PostRepo, repo repository.LikeRepo, favoritesRepo repository.FavoritesRepo, collectionRepo repository.CollectionRepo) PostUseCase {
+func NewPostUseCase(postRepository repository.PostRepo, repo repository.LikeRepo, favoritesRepo repository.FavoritesRepo, collectionRepo repository.CollectionRepo, logger *logger.Logger) PostUseCase {
 	return &postUseCase{
 		postRepository: postRepository,
 		likeRepository: repo,
 		favoriteRepository: favoritesRepo,
 		collectionRepository: collectionRepo,
+		logger: logger,
 	}
 }

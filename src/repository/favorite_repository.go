@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gocql/gocql"
+	logger "github.com/jelena-vlajkov/logger/logger"
 	"time"
 )
 
@@ -25,12 +26,14 @@ type FavoritesRepo interface {
 
 type favoritesRepository struct {
 	cassandraSession *gocql.Session
+	logger *logger.Logger
 }
 
 func (f favoritesRepository) GetFavorites(userId string) (map[string]string, error) {
 	var posts map[string]string
 	iter := f.cassandraSession.Query(GetFavoritesForUser, userId).Iter()
 	if iter == nil {
+		f.logger.Logger.Errorf("no favorites for user %v\n", userId)
 		return nil, fmt.Errorf("no such element")
 	}
 
@@ -43,6 +46,7 @@ func (f favoritesRepository) AddPostToFavorites(postId string, profileId string,
 	iter := f.cassandraSession.Query(GetFavoritesForUser, profileId).Iter()
 
 	if iter == nil {
+		f.logger.Logger.Errorf("no favorites for user %v\n", profileId)
 		return fmt.Errorf("no such element")
 	}
 	var posts map[string]string
@@ -63,6 +67,7 @@ func (f favoritesRepository) AddPostToFavorites(postId string, profileId string,
 		err = f.cassandraSession.Query(UpdateFavorites, posts, profileId).Exec()
 	}
 	if err != nil {
+		f.logger.Logger.Errorf("error while adding post %v to favorites for user %v, error: %v\n", postId, profileId, err)
 		return err
 	}
 
@@ -76,15 +81,17 @@ func (f favoritesRepository) RemovePostFromFavorites(postId string, profileId st
 	err := f.cassandraSession.Query(UpdateFavorites, posts, profileId).Exec()
 
 	if err != nil {
+		f.logger.Logger.Errorf("error while removin post %v from favorites for user %v, error: %v\n", postId, profileId, err)
 		return err
 	}
 
 	return nil
 }
 
-func NewFavoritesRepository(cassandraSession *gocql.Session) FavoritesRepo {
+func NewFavoritesRepository(cassandraSession *gocql.Session, logger *logger.Logger) FavoritesRepo {
 	var f = favoritesRepository {
 		cassandraSession: cassandraSession,
+		logger: logger,
 	}
 	err := f.cassandraSession.Query(CreateFavoritesTable).Exec()
 	if err != nil {
