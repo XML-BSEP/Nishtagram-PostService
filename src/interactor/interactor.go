@@ -2,6 +2,7 @@ package interactor
 
 import (
 	"github.com/gocql/gocql"
+	logger "github.com/jelena-vlajkov/logger/logger"
 	"post-service/http/handler"
 	"post-service/infrastructure/data_seeder"
 	"post-service/repository"
@@ -36,10 +37,11 @@ type Interactor interface {
 
 type interactor struct {
 	cassandraSession *gocql.Session
+	logger *logger.Logger
 }
 
 func (i interactor) NewPostUseCase() usecase.PostUseCase {
-	return usecase.NewPostUseCase(i.NewPostRepo(), i.NewLikeRepo(), i.NewFavoriteRepo(), i.NewCollectionRepo())
+	return usecase.NewPostUseCase(i.NewPostRepo(), i.NewLikeRepo(), i.NewFavoriteRepo(), i.NewCollectionRepo(), i.logger)
 }
 
 func (i interactor) NewReportPostUseCase() usecase.PostReportUseCase {
@@ -47,19 +49,19 @@ func (i interactor) NewReportPostUseCase() usecase.PostReportUseCase {
 }
 
 func (i interactor) NewLikeUseCase() usecase.LikeUseCase {
-	return usecase.NewLikeUseCase(i.NewLikeRepo())
+	return usecase.NewLikeUseCase(i.NewLikeRepo(), i.logger)
 }
 
 func (i interactor) NewCommentUseCase() usecase.CommentUseCase {
-	return usecase.NewCommentUseCase(i.NewCommentRepo())
+	return usecase.NewCommentUseCase(i.NewCommentRepo(), i.logger)
 }
 
 func (i interactor) NewFavoriteUseCase() usecase.FavoriteUseCase {
-	return usecase.NewFavoriteUseCase(i.NewFavoriteRepo(), i.NewPostRepo(), i.NewPostUseCase())
+	return usecase.NewFavoriteUseCase(i.NewFavoriteRepo(), i.NewPostRepo(), i.NewPostUseCase(), i.logger)
 }
 
 func (i interactor) NewCollectionUseCase() usecase.CollectionUseCase {
-	return usecase.NewCollectionUseCase(i.NewCollectionRepo(), i.NewPostRepo(), i.NewPostUseCase())
+	return usecase.NewCollectionUseCase(i.NewCollectionRepo(), i.NewPostRepo(), i.NewPostUseCase(), i.logger)
 }
 
 func (i interactor) NewReportPostHandler() handler.ReportPostHandler {
@@ -67,19 +69,19 @@ func (i interactor) NewReportPostHandler() handler.ReportPostHandler {
 }
 
 func (i interactor) NewLikeHandler() handler.LikeHandler {
-	return handler.NewLikeHandler(i.NewLikeUseCase())
+	return handler.NewLikeHandler(i.NewLikeUseCase(), i.logger)
 }
 
 func (i interactor) NewCommentHandler() handler.CommentHandler {
-	return handler.NewCommentHandler(i.NewCommentUseCase())
+	return handler.NewCommentHandler(i.NewCommentUseCase(), i.logger)
 }
 
 func (i interactor) NewFavoriteHandler() handler.FavoriteHandler {
-	return handler.NewFavoriteHandler(i.NewFavoriteUseCase())
+	return handler.NewFavoriteHandler(i.NewFavoriteUseCase(), i.logger)
 }
 
 func (i interactor) NewCollectionHandler() handler.CollectionHandler {
-	return handler.NewCollectionHandler(i.NewCollectionUseCase())
+	return handler.NewCollectionHandler(i.NewCollectionUseCase(), i.logger)
 }
 
 type appHandler struct {
@@ -106,34 +108,34 @@ func (i interactor) NewAppHandler() handler.AppHandler {
 }
 
 func (i interactor) NewPostHandler() handler.PostHandler {
-	return handler.NewPostHandler(i.NewPostUseCase())
+	return handler.NewPostHandler(i.NewPostUseCase(), i.logger)
 }
 
 
 func (i interactor) NewPostRepo() repository.PostRepo {
-	return repository.NewPostRepository(i.cassandraSession)
+	return repository.NewPostRepository(i.cassandraSession, i.logger)
 }
 
 func (i interactor) NewLikeRepo() repository.LikeRepo {
-	return repository.NewLikeRepository(i.cassandraSession)
+	return repository.NewLikeRepository(i.cassandraSession, i.logger)
 }
 
 func (i interactor) NewFavoriteRepo() repository.FavoritesRepo {
-	return repository.NewFavoritesRepository(i.cassandraSession)
+	return repository.NewFavoritesRepository(i.cassandraSession, i.logger)
 }
 
 func (i interactor) NewCollectionRepo() repository.CollectionRepo {
-	return repository.NewCollectionRepository(i.cassandraSession)
+	return repository.NewCollectionRepository(i.cassandraSession, i.logger)
 }
 
 func (i interactor) NewCommentRepo() repository.CommentRepo {
-	return repository.NewCommentRepository(i.cassandraSession)
+	return repository.NewCommentRepository(i.cassandraSession, i.logger)
 }
 
 func (i interactor) NewReportRepo() repository.ReportRepo {
 	return repository.NewReportRepository(i.cassandraSession)
 }
 
-func NewInteractor(cassandraSession *gocql.Session) Interactor {
-	return &interactor{cassandraSession: cassandraSession}
+func NewInteractor(cassandraSession *gocql.Session, logger *logger.Logger) Interactor {
+	return &interactor{cassandraSession: cassandraSession, logger: logger}
 }

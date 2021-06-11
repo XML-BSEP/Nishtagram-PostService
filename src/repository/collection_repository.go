@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gocql/gocql"
 	"github.com/google/uuid"
+	logger "github.com/jelena-vlajkov/logger/logger"
 	"post-service/dto"
 	"time"
 )
@@ -31,11 +32,13 @@ type CollectionRepo interface {
 
 type collectionRepository struct {
 	cassandraSession *gocql.Session
+	logger *logger.Logger
 }
 
 func (c collectionRepository) GetAllCollections(userId string, ctx context.Context) ([]dto.CollectionDTO, error) {
 	iter := c.cassandraSession.Query(GetAllCollectionNames, userId).Iter()
 	if iter == nil {
+		c.logger.Logger.Errorf("no collections for user %v\n", userId)
 		return nil, fmt.Errorf("no collections")
 	}
 
@@ -56,7 +59,9 @@ func (c collectionRepository) GetAllCollections(userId string, ctx context.Conte
 
 func (c collectionRepository) GetAllCollectionNames(userId string, ctx context.Context) ([]string, error) {
 	iter := c.cassandraSession.Query(GetAllCollectionNames, userId).Iter()
+
 	if iter == nil {
+		c.logger.Logger.Errorf("no collections for user %v\n", userId)
 		return nil, fmt.Errorf("no collections")
 	}
 
@@ -79,6 +84,7 @@ func (c collectionRepository) GetCollection(userId string, collectionName string
 	iter := c.cassandraSession.Query(GetCollection, userId, collectionName).Iter()
 
 	if iter == nil {
+		c.logger.Logger.Errorf("no collection with name %v for user %v\n", collectionName, userId)
 		return nil, fmt.Errorf("no such collection")
 	}
 
@@ -90,6 +96,7 @@ func (c collectionRepository) DeleteCollection(userId string, collectionName str
 	err := c.cassandraSession.Query(DeleteCollection, userId, collectionName).Exec()
 
 	if err != nil {
+		c.logger.Logger.Errorf("error while deleting collection with name %v for user %v, error: %v\n", collectionName, userId, err)
 		return err
 	}
 
@@ -100,6 +107,7 @@ func (c collectionRepository) CreateCollection(userId string, collectionName str
 	var posts []string
 	collectionId, err := uuid.NewUUID()
 	if err != nil {
+		c.logger.Logger.Errorf("error while saving collection with name %v for user %v, error: %v\n", collectionName, userId, err)
 		return fmt.Errorf("error while saving collection")
 	}
 	err = c.cassandraSession.Query(InsertCollectionStatement, collectionId, userId, collectionName, time.Now(), posts).Exec()
@@ -118,6 +126,7 @@ func (c collectionRepository) AddPostToCollection(userId string, collectionName 
 	iter := c.cassandraSession.Query(GetCollection, userId, collectionName).Iter()
 
 	if iter == nil {
+		c.logger.Logger.Errorf("error while saving post %v to collection with name %v for user %v\n", postId, collectionName, userId)
 		return fmt.Errorf("error while saving post to collection")
 	}
 
@@ -128,6 +137,7 @@ func (c collectionRepository) AddPostToCollection(userId string, collectionName 
 	err := c.cassandraSession.Query(UpdateCollection, posts, userId, collectionName).Exec()
 
 	if err != nil {
+		c.logger.Logger.Errorf("error while saving post %v to collection with name %v for user %v, error:  %v\n", postId, collectionName, userId, err)
 		return err
 	}
 
@@ -141,6 +151,7 @@ func (c collectionRepository) RemovePostFromCollection(userId string, collection
 	iter := c.cassandraSession.Query(GetCollection, userId, collectionName).Iter()
 
 	if iter == nil {
+		c.logger.Logger.Errorf("error while removing post %v to collection with name %v for user %v\n", postId, collectionName, userId)
 		return fmt.Errorf("error while saving post to collection")
 	}
 	var newPosts map[string]string
@@ -156,29 +167,21 @@ func (c collectionRepository) RemovePostFromCollection(userId string, collection
 	err := c.cassandraSession.Query(UpdateCollection, posts, userId, collectionName).Exec()
 
 	if err != nil {
+		c.logger.Logger.Errorf("error while removing post %v to collection with name %v for user %v, error:  %v\n", postId, collectionName, userId, err)
 		return err
 	}
 
 	return nil
 }
 
-func NewCollectionRepository(cassandraSession *gocql.Session) CollectionRepo {
+func NewCollectionRepository(cassandraSession *gocql.Session, logger *logger.Logger) CollectionRepo {
 	var c = &collectionRepository{
 		cassandraSession: cassandraSession,
+		logger: logger,
 	}
 	err := c.cassandraSession.Query(CreateCollectionTable).Exec()
 	if err != nil {
 		return nil
 	}
 	return c
-}
-
-
-func remove(s []string, r string) []string {
-	for i, v := range s {
-		if v == r {
-			return append(s[:i], s[i+1:]...)
-		}
-	}
-	return s
 }

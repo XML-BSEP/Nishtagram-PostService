@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	logger "github.com/jelena-vlajkov/logger/logger"
 	"post-service/dto"
 	"post-service/http/middleware"
 	"post-service/usecase"
@@ -20,19 +21,22 @@ type CollectionHandler interface {
 
 type collectionHandler struct {
 	collectionUseCase usecase.CollectionUseCase
+	logger *logger.Logger
 }
 
 func (c collectionHandler) GetCollection(ctx *gin.Context) {
+	c.logger.Logger.Println("Handling GETTING COLLECTION")
 	var collectionDTO dto.CollectionDTO
 
 	decoder := json.NewDecoder(ctx.Request.Body)
 
 	if err := decoder.Decode(&collectionDTO); err != nil {
+		c.logger.Logger.Errorf("error while decoding json, error: %v\n", err)
 		ctx.JSON(400, "invalid request")
 		ctx.Abort()
 		return
 	}
-	userId, _ := middleware.ExtractUserId(ctx.Request)
+	userId, _ := middleware.ExtractUserId(ctx.Request, c.logger)
 	collection, err := c.collectionUseCase.GetCollection(userId, collectionDTO.CollectionName, context.Background())
 	if err != nil {
 		ctx.JSON(500, "server error")
@@ -45,26 +49,25 @@ func (c collectionHandler) GetCollection(ctx *gin.Context) {
 }
 
 func (c collectionHandler) GetAllCollections(ctx *gin.Context) {
-
-	userId, _ := middleware.ExtractUserId(ctx.Request)
-
+	c.logger.Logger.Println("Handling GETTING ALL COLLECTIONS")
+	userId, _ := middleware.ExtractUserId(ctx.Request, c.logger)
 	collections, err := c.collectionUseCase.GetAllCollectionsPerUser(userId, ctx)
-
 	if err != nil {
 		ctx.JSON(500, "server error")
 		ctx.Abort()
 		return
 	}
-
 	ctx.JSON(200, collections)
 }
 
 func (c collectionHandler) CreateCollection(context *gin.Context) {
+	c.logger.Logger.Println("HANDLING CREATING COLLECTION")
 	var collectionDTO dto.CollectionDTO
 
 	decoder := json.NewDecoder(context.Request.Body)
 
 	if err := decoder.Decode(&collectionDTO); err != nil {
+		c.logger.Logger.Errorf("error while decoding json, error: %v\n", err)
 		context.JSON(400, "invalid request")
 		context.Abort()
 		return
@@ -83,11 +86,13 @@ func (c collectionHandler) CreateCollection(context *gin.Context) {
 }
 
 func (c collectionHandler) RemovePostFromCollection(context *gin.Context) {
+	c.logger.Logger.Println("Handling REMOVING POST FROM COLLECTION")
 	var collectionDTO dto.CollectionDTO
 
 	decoder := json.NewDecoder(context.Request.Body)
 
 	if err := decoder.Decode(&collectionDTO); err != nil {
+		c.logger.Logger.Errorf("error while decoding json, error: %v\n", err)
 		context.JSON(400, "invalid request")
 		context.Abort()
 		return
@@ -103,11 +108,13 @@ func (c collectionHandler) RemovePostFromCollection(context *gin.Context) {
 }
 
 func (c collectionHandler) DeleteCollection(context *gin.Context) {
+	c.logger.Logger.Println("Handling DELETING COLLECTION")
 	var collectionDTO dto.CollectionDTO
 
 	decoder := json.NewDecoder(context.Request.Body)
 
 	if err := decoder.Decode(&collectionDTO); err != nil {
+		c.logger.Logger.Errorf("error while decoding json, error: %v\n", err)
 		context.JSON(400, "invalid request")
 		context.Abort()
 		return
@@ -125,16 +132,18 @@ func (c collectionHandler) DeleteCollection(context *gin.Context) {
 }
 
 func (c collectionHandler) AddPostToCollection(context *gin.Context) {
+	c.logger.Logger.Println("Handling ADDING POST TO COLLECTION")
 	var collectionDTO dto.CollectionDTO
 
 	decoder := json.NewDecoder(context.Request.Body)
 
 	if err := decoder.Decode(&collectionDTO); err != nil {
+		c.logger.Logger.Errorf("error while decoding json, error: %v\n", err)
 		context.JSON(400, "invalid request")
 		context.Abort()
 		return
 	}
-	collectionDTO.UserId, _ = middleware.ExtractUserId(context.Request)
+	collectionDTO.UserId, _ = middleware.ExtractUserId(context.Request, c.logger)
 	err := c.collectionUseCase.AddPostToCollection(collectionDTO, context)
 
 	if err != nil {
@@ -146,6 +155,6 @@ func (c collectionHandler) AddPostToCollection(context *gin.Context) {
 	context.JSON(200, "ok")
 }
 
-func NewCollectionHandler(collectionUseCase usecase.CollectionUseCase) CollectionHandler {
-	return &collectionHandler{collectionUseCase: collectionUseCase}
+func NewCollectionHandler(collectionUseCase usecase.CollectionUseCase, logger *logger.Logger) CollectionHandler {
+	return &collectionHandler{collectionUseCase: collectionUseCase, logger: logger}
 }

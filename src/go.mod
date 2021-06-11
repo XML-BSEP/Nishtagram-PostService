@@ -2,13 +2,17 @@ module post-service
 
 go 1.16
 
+replace github.com/jelena-vlajkov/logger/logger => ../../Nishtagram-Logger/
+
 require (
-	github.com/casbin/casbin/v2 v2.31.2 // indirect
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
+	github.com/casbin/casbin/v2 v2.31.2
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.7.2
-	github.com/go-resty/resty/v2 v2.6.0 // indirect
+	github.com/go-resty/resty/v2 v2.6.0
 	github.com/gocql/gocql v0.0.0-20210515062232-b7ef815b4556
-	github.com/google/uuid v1.2.0 // indirect
+	github.com/google/uuid v1.2.0
+	github.com/jelena-vlajkov/logger/logger v1.0.0
+	github.com/sirupsen/logrus v1.8.1 // indirect
+	github.com/snowzach/rotatefilehook v0.0.0-20180327172521-2f64f265f58c // indirect
 	github.com/spf13/viper v1.7.1
-	
 )

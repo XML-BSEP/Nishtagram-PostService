@@ -7,4 +7,5 @@ type CommentDTO struct {
 	PostId string `json:"postId" validate:"required"`
 	PostBy string `json:"postBy" validate:"required"`
 	CommentBy domain.Profile `json:"user" validate:"required"`
+	CommentId string `json:"comment_id"`
 }

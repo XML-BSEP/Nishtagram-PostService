@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	logger "github.com/jelena-vlajkov/logger/logger"
 	"post-service/dto"
 	"post-service/http/middleware"
 	"post-service/usecase"
@@ -17,10 +18,12 @@ type FavoriteHandler interface {
 
 type favoriteHandler struct {
 	favoriteUseCase usecase.FavoriteUseCase
+	logger *logger.Logger
 }
 
 func (f favoriteHandler) GetFavorites(ctx *gin.Context) {
-	userId, _ := middleware.ExtractUserId(ctx.Request)
+	f.logger.Logger.Println("Handling GETTING FAVORITES")
+	userId, _ := middleware.ExtractUserId(ctx.Request, f.logger)
 	favorite, err := f.favoriteUseCase.GetFavoritesForUser(userId, context.Background())
 
 	if err != nil {
@@ -33,16 +36,18 @@ func (f favoriteHandler) GetFavorites(ctx *gin.Context) {
 }
 
 func (f favoriteHandler) RemovePostFromFavorites(context *gin.Context) {
+	f.logger.Logger.Println("Handling REMOVING POST FROM FAVORITES")
 	var favoriteDTO dto.FavoriteDTO
 
 	decoder := json.NewDecoder(context.Request.Body)
 
 	if err := decoder.Decode(&favoriteDTO); err != nil {
+		f.logger.Logger.Errorf("error while decoding json, error: %v\n", err)
 		context.JSON(400, "invalid request")
 		context.Abort()
 		return
 	}
-	favoriteDTO.UserId, _ = middleware.ExtractUserId(context.Request)
+	favoriteDTO.UserId, _ = middleware.ExtractUserId(context.Request, f.logger)
 	err := f.favoriteUseCase.RemovePostFromFavorites(favoriteDTO, context)
 
 	if err != nil {
@@ -55,17 +60,19 @@ func (f favoriteHandler) RemovePostFromFavorites(context *gin.Context) {
 }
 
 func (f favoriteHandler) AddPostToFavorite(context *gin.Context) {
+	f.logger.Logger.Println("Handling ADDING POST TO FAVORITES")
 	var favoriteDTO dto.FavoriteDTO
 
 	decoder := json.NewDecoder(context.Request.Body)
 
 	if err := decoder.Decode(&favoriteDTO); err != nil {
+		f.logger.Logger.Errorf("error while decoding json, error: %v\n", err)
 		context.JSON(400, "invalid request")
 		context.Abort()
 		return
 	}
 
-	favoriteDTO.UserId, _ = middleware.ExtractUserId(context.Request)
+	favoriteDTO.UserId, _ = middleware.ExtractUserId(context.Request, f.logger)
 	err := f.favoriteUseCase.AddPostToFavorites(favoriteDTO, context)
 
 	if err != nil {
@@ -77,6 +84,6 @@ func (f favoriteHandler) AddPostToFavorite(context *gin.Context) {
 	context.JSON(200, "ok")
 }
 
-func NewFavoriteHandler(favoriteUseCase usecase.FavoriteUseCase) FavoriteHandler {
-	return &favoriteHandler{favoriteUseCase: favoriteUseCase}
+func NewFavoriteHandler(favoriteUseCase usecase.FavoriteUseCase, logger *logger.Logger) FavoriteHandler {
+	return &favoriteHandler{favoriteUseCase: favoriteUseCase, logger: logger}
 }

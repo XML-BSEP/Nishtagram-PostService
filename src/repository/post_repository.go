@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gocql/gocql"
 	"github.com/google/uuid"
+	logger "github.com/jelena-vlajkov/logger/logger"
 	"post-service/dto"
 	"time"
 )
@@ -49,6 +50,7 @@ type PostRepo interface {
 
 type postRepository struct {
 	cassandraSession *gocql.Session
+	logger *logger.Logger
 }
 
 func (p postRepository) GetPostsInDateTimeRange(userId string, timeRange time.Time, ctx context.Context) []string {
@@ -78,6 +80,7 @@ func (p postRepository) GetPostsById(userId string, postId string, ctx context.C
 	var post dto.PostDTO
 
 	if iter == nil {
+		p.logger.Logger.Errorf("error while getting post %v by user %v\n", postId, userId)
 		return post, fmt.Errorf("no such element")
 	}
 
@@ -104,6 +107,7 @@ func (p postRepository) GetPostsByUserId(userId string, ctx context.Context) ([]
 	iter := p.cassandraSession.Query(GetPostsByUserId, userId).Iter().Scanner()
 	var posts []dto.PostDTO
 	if iter == nil {
+		p.logger.Logger.Errorf("error while getting posts for user %v, error: no posts\n", userId)
 		return nil, iter.Err()
 	}
 
@@ -132,6 +136,7 @@ func (p postRepository) CreatePost(req dto.CreatePostDTO, ctx context.Context) e
 	err = p.cassandraSession.Query(InsertIntoPostsTimestampTable, postId, req.UserId.UserId, currentTime).Exec()
 
 	if err != nil {
+		p.logger.Logger.Errorf("error while saving post for user %v\n", req.UserId)
 		return fmt.Errorf("error while saving post")
 	}
 	return nil
@@ -142,6 +147,7 @@ func (p postRepository) EditPost(req dto.UpdatePostDTO, ctx context.Context) err
 		req.Location.Location, req.Location.Latitude, req.Location.Longitude, req.UserId, req.PostId).Exec()
 
 	if err != nil {
+		p.logger.Logger.Errorf("error while editing post for user %v\n", req.UserId)
 		return fmt.Errorf("error while updating post")
 	}
 
@@ -152,15 +158,17 @@ func (p postRepository) DeletePost(req dto.DeletePostDTO, ctx context.Context) e
 	err := p.cassandraSession.Query(DeletePost, req.UserId, req.PostId).Exec()
 
 	if err != nil {
+		p.logger.Logger.Errorf("error while deleting post with id %v for user %v, error: %v\n", req.PostId, req.UserId, err)
 		return fmt.Errorf("error while deleting post")
 	}
 
 	return nil
 }
 
-func NewPostRepository(cassandraSession *gocql.Session) PostRepo {
+func NewPostRepository(cassandraSession *gocql.Session, logger *logger.Logger) PostRepo {
 	var p = &postRepository{
 		cassandraSession: cassandraSession,
+		logger: logger,
 	}
 	err := p.cassandraSession.Query(CreatePostTable).Exec()
 	err = p.cassandraSession.Query(CreatePostsTimestampTable).Exec()

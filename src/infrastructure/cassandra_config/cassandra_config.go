@@ -2,6 +2,7 @@ package cassandra_config
 
 import (
 	"github.com/gocql/gocql"
+	logger "github.com/jelena-vlajkov/logger/logger"
 	"github.com/spf13/viper"
 	"log"
 	"strconv"
@@ -21,7 +22,7 @@ const (
 	CreateKeyspace ="CREATE KEYSPACE if not exists post_keyspace WITH replication = { 'class': 'SimpleStrategy', 'replication_factor': '1' };"
 )
 
-func NewCassandraSession() (*gocql.Session, error) {
+func NewCassandraSession(logger *logger.Logger) (*gocql.Session, error) {
 	init_viper()
 	var domain string
 	if viper.GetBool(`docker`){
@@ -39,14 +40,14 @@ func NewCassandraSession() (*gocql.Session, error) {
 
 	session, err := cluster.CreateSession()
 	if err != nil {
-		log.Println(err)
+		logger.Logger.Fatalf("failed to connect to Cassandra Post DB, error: %v\n", err)
 		return nil, err
 	}
 
 	err = session.Query(CreateKeyspace).Exec()
 
 	if err != nil {
-		log.Println(err)
+		logger.Logger.Fatalf("failed to create keyspace in Cassandra Post DB, error: %v\n", err)
 		return nil, err
 	}
 	return session, err
