@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	logger "github.com/jelena-vlajkov/logger/logger"
+	_ "post-service/gateway"
 	router2 "post-service/http/router"
 	"post-service/infrastructure/cassandra_config"
 	"post-service/interactor"
+	_ "post-service/usecase"
 )
 
 

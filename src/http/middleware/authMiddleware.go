@@ -15,14 +15,14 @@ func AuthMiddleware(logger *logger.Logger) gin.HandlerFunc {
 	return func (c *gin.Context) {
 		role, err := ExtractRole(c.Request, logger)
 		if err != nil {
-			logger.Logger.Errorf("unauthorized request from IP address: %v", c.Request.Host)
+			logger.Logger.Errorf("unauthorized request from IP address: %v", c.Request.Referer())
 			c.JSON(401, gin.H{"message" : "Unauthorized"})
 			c.Abort()
 			return
 		}
 
 		if role == "" {
-			logger.Logger.Errorf("unauthorized request from IP address: %v", c.Request.Host)
+			logger.Logger.Errorf("unauthorized request from IP address: %v", c.Request.Referer())
 			c.JSON(401, gin.H{"message" : "Unauthorized"})
 			c.Abort()
 			return
@@ -37,7 +37,7 @@ func AuthMiddleware(logger *logger.Logger) gin.HandlerFunc {
 		}
 
 		if !ok {
-			logger.Logger.Errorf("forbidden request from IP address: %v", c.Request.Host)
+			logger.Logger.Errorf("forbidden request from IP address: %v", c.Request.Referer())
 			c.JSON(403, gin.H{"message" : "forbidden"})
 			c.Abort()
 			return

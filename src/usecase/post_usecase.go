@@ -142,6 +142,7 @@ func (p postUseCase) DecodeBase64(media string, userId string, ctx context.Conte
 		f, _ = os.Open(spliced[0])
 	}
 
+	defer f.Close()
 	reader := bufio.NewReader(f)
 	content, _ := ioutil.ReadAll(reader)
 

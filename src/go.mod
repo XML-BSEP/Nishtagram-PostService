@@ -12,7 +12,5 @@ require (
 	github.com/gocql/gocql v0.0.0-20210515062232-b7ef815b4556
 	github.com/google/uuid v1.2.0
 	github.com/jelena-vlajkov/logger/logger v1.0.0
-	github.com/sirupsen/logrus v1.8.1 // indirect
-	github.com/snowzach/rotatefilehook v0.0.0-20180327172521-2f64f265f58c // indirect
 	github.com/spf13/viper v1.7.1
 )
