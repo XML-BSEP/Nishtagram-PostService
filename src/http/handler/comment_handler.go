@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	logger "github.com/jelena-vlajkov/logger/logger"
+	"github.com/microcosm-cc/bluemonday"
 	"post-service/dto"
 	"post-service/http/middleware"
 	"post-service/usecase"
+	"strings"
 )
 
 type CommentHandler interface {
@@ -72,6 +74,11 @@ func (c commentHandler) DeleteComment(context *gin.Context) {
 func (c commentHandler) AddComment(context *gin.Context) {
 	c.logger.Logger.Println("Handling ADDING COMMENTS")
 	var commentDTO dto.CommentDTO
+
+	policy := bluemonday.UGCPolicy();
+	commentDTO.Comment =  strings.TrimSpace(policy.Sanitize(commentDTO.Comment))
+	commentDTO.PostId =  strings.TrimSpace(policy.Sanitize(commentDTO.PostId))
+	commentDTO.PostBy =  strings.TrimSpace(policy.Sanitize(commentDTO.PostBy))
 
 	decoder := json.NewDecoder(context.Request.Body)
 

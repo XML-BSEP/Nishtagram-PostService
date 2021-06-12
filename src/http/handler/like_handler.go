@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	logger "github.com/jelena-vlajkov/logger/logger"
+	"github.com/microcosm-cc/bluemonday"
 	"post-service/dto"
 	"post-service/http/middleware"
 	"post-service/usecase"
+	"strings"
 )
 
 type LikeHandler interface {
@@ -34,6 +36,9 @@ func (l likeHandler) DislikePost(context *gin.Context) {
 		return
 	}
 	dislikeDTO.UserId, _ = middleware.ExtractUserId(context.Request, l.logger)
+	policy := bluemonday.UGCPolicy();
+	dislikeDTO.PostBy =  strings.TrimSpace(policy.Sanitize(dislikeDTO.PostBy))
+	dislikeDTO.PostId =  strings.TrimSpace(policy.Sanitize(dislikeDTO.PostId))
 
 	err := l.likeUseCase.DislikePost(dislikeDTO, context)
 
@@ -61,6 +66,10 @@ func (l likeHandler) RemoveLike(context *gin.Context) {
 
 	likeDTO.UserId, _ = middleware.ExtractUserId(context.Request, l.logger)
 
+	policy := bluemonday.UGCPolicy();
+	likeDTO.PostBy =  strings.TrimSpace(policy.Sanitize(likeDTO.PostBy))
+	likeDTO.PostId =  strings.TrimSpace(policy.Sanitize(likeDTO.PostId))
+
 	err := l.likeUseCase.RemoveLike(likeDTO, context)
 
 	if err != nil {
@@ -84,6 +93,9 @@ func (l likeHandler) RemoveDislike(context *gin.Context) {
 		context.Abort()
 		return
 	}
+	policy := bluemonday.UGCPolicy();
+	dislikeDTO.PostBy =  strings.TrimSpace(policy.Sanitize(dislikeDTO.PostBy))
+	dislikeDTO.PostId =  strings.TrimSpace(policy.Sanitize(dislikeDTO.PostId))
 
 	dislikeDTO.UserId, _ = middleware.ExtractUserId(context.Request, l.logger)
 	err := l.likeUseCase.RemoveDislike(dislikeDTO, context)
@@ -111,6 +123,9 @@ func (l likeHandler) LikePost(context *gin.Context) {
 	}
 
 	likeDTO.UserId, _ = middleware.ExtractUserId(context.Request, l.logger)
+	policy := bluemonday.UGCPolicy();
+	likeDTO.PostBy =  strings.TrimSpace(policy.Sanitize(likeDTO.PostBy))
+	likeDTO.PostId =  strings.TrimSpace(policy.Sanitize(likeDTO.PostId))
 
 	err := l.likeUseCase.LikePost(likeDTO, context)
 

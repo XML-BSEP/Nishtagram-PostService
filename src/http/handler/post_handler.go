@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	logger "github.com/jelena-vlajkov/logger/logger"
+	"github.com/microcosm-cc/bluemonday"
 	"post-service/domain"
 	"post-service/dto"
 	"post-service/http/middleware"
 	"post-service/usecase"
+	"strings"
 )
 
 type PostHandler interface {
@@ -176,6 +178,21 @@ func (p postHandler) AddPost(context *gin.Context) {
 	var createPostDTO dto.CreatePostDTO
 
 	decoder := json.NewDecoder(context.Request.Body)
+
+	policy := bluemonday.UGCPolicy();
+
+	createPostDTO.Location =  strings.TrimSpace(policy.Sanitize(createPostDTO.Location))
+	createPostDTO.Caption =  strings.TrimSpace(policy.Sanitize(createPostDTO.Caption))
+	for i,_ := range createPostDTO.Hashtags{
+		createPostDTO.Hashtags[i] =  strings.TrimSpace(policy.Sanitize(createPostDTO.Hashtags[i]))
+	}
+	for i,_ := range createPostDTO.Album{
+		createPostDTO.Album[i] =  strings.TrimSpace(policy.Sanitize(createPostDTO.Album[i]))
+	}
+
+	createPostDTO.Image =  strings.TrimSpace(policy.Sanitize(createPostDTO.Image))
+	createPostDTO.Video =  strings.TrimSpace(policy.Sanitize(createPostDTO.Video))
+
 
 	if err := decoder.Decode(&createPostDTO); err != nil {
 		p.logger.Logger.Errorf("error while decoding json, error: %v\n", err)

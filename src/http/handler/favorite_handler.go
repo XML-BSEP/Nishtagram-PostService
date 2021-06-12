@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	logger "github.com/jelena-vlajkov/logger/logger"
+	"github.com/microcosm-cc/bluemonday"
 	"post-service/dto"
 	"post-service/http/middleware"
 	"post-service/usecase"
+	"strings"
 )
 
 type FavoriteHandler interface {
@@ -38,6 +40,9 @@ func (f favoriteHandler) GetFavorites(ctx *gin.Context) {
 func (f favoriteHandler) RemovePostFromFavorites(context *gin.Context) {
 	f.logger.Logger.Println("Handling REMOVING POST FROM FAVORITES")
 	var favoriteDTO dto.FavoriteDTO
+	policy := bluemonday.UGCPolicy();
+	favoriteDTO.PostBy =  strings.TrimSpace(policy.Sanitize(favoriteDTO.PostBy))
+	favoriteDTO.PostId =  strings.TrimSpace(policy.Sanitize(favoriteDTO.PostId))
 
 	decoder := json.NewDecoder(context.Request.Body)
 
@@ -62,6 +67,9 @@ func (f favoriteHandler) RemovePostFromFavorites(context *gin.Context) {
 func (f favoriteHandler) AddPostToFavorite(context *gin.Context) {
 	f.logger.Logger.Println("Handling ADDING POST TO FAVORITES")
 	var favoriteDTO dto.FavoriteDTO
+	policy := bluemonday.UGCPolicy();
+	favoriteDTO.PostBy =  strings.TrimSpace(policy.Sanitize(favoriteDTO.PostBy))
+	favoriteDTO.PostId =  strings.TrimSpace(policy.Sanitize(favoriteDTO.PostId))
 
 	decoder := json.NewDecoder(context.Request.Body)
 
