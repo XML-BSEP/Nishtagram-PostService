@@ -29,6 +29,7 @@ type favoritesRepository struct {
 	logger *logger.Logger
 }
 
+
 func (f favoritesRepository) GetFavorites(userId string) (map[string]string, error) {
 	var posts map[string]string
 	iter := f.cassandraSession.Query(GetFavoritesForUser, userId).Iter()

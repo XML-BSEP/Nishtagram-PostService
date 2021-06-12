@@ -72,66 +72,6 @@ func (p postUseCase) GetPostDTO(postId string, userId string, userRequestedId st
 			}
 		}
 	}
-	if len(post.Hashtags) > 0 {
-		for _, s := range post.Hashtags {
-			if s != "" {
-				appendToDescHashtags = appendToDescHashtags + "#" + s
-			}
-		}
-	}
-
-	if len(post.Mentions) > 0 {
-		for _, s := range post.Mentions {
-			if s != "" {
-				appendToTags = appendToTags + "@" + s
-			}
-		}
-	}
-	if len(post.Hashtags) > 0 {
-		for _, s := range post.Hashtags {
-			if s != "" {
-				appendToDescHashtags = appendToDescHashtags + "#" + s
-			}
-		}
-	}
-
-	if len(post.Mentions) > 0 {
-		for _, s := range post.Mentions {
-			if s != "" {
-				appendToTags = appendToTags + "@" + s
-			}
-		}
-	}
-	if len(post.Hashtags) > 0 {
-		for _, s := range post.Hashtags {
-			if s != "" {
-				appendToDescHashtags = appendToDescHashtags + "#" + s
-			}
-		}
-	}
-
-	if len(post.Mentions) > 0 {
-		for _, s := range post.Mentions {
-			if s != "" {
-				appendToTags = appendToTags + "@" + s
-			}
-		}
-	}
-	if len(post.Hashtags) > 0 {
-		for _, s := range post.Hashtags {
-			if s != "" {
-				appendToDescHashtags = appendToDescHashtags + "#" + s
-			}
-		}
-	}
-
-	if len(post.Mentions) > 0 {
-		for _, s := range post.Mentions {
-			if s != "" {
-				appendToTags = appendToTags + "@" + s
-			}
-		}
-	}
 
 	p.logger.Logger.Infof("getting user info for %v from user ms\n", userId)
 	profile, err := gateway.GetUser(context.Background(), post.Profile.Id)
@@ -185,7 +125,7 @@ func (p postUseCase) DecodeBase64(media string, userId string, ctx context.Conte
 	workingDirectory, _ := os.Getwd()
 	if !strings.HasSuffix(workingDirectory, "src") {
 		firstPart := strings.Split(workingDirectory, "src")
-		value := firstPart[0] + "src"
+		value := firstPart[0] + "/src"
 		workingDirectory = value
 		os.Chdir(workingDirectory)
 	}
@@ -202,6 +142,7 @@ func (p postUseCase) DecodeBase64(media string, userId string, ctx context.Conte
 		f, _ = os.Open(spliced[0])
 	}
 
+	defer f.Close()
 	reader := bufio.NewReader(f)
 	content, _ := ioutil.ReadAll(reader)
 
@@ -312,7 +253,7 @@ func (p postUseCase) EncodeBase64(media string, userId string, ctx context.Conte
 	workingDirectory, _ := os.Getwd()
 	if !strings.HasSuffix(workingDirectory, "src") {
 		firstPart := strings.Split(workingDirectory, "src")
-		value := firstPart[0] + "src"
+		value := firstPart[0] + "/src"
 		workingDirectory = value
 		os.Chdir(workingDirectory)
 	}
