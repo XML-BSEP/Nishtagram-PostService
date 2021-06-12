@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	logger "github.com/jelena-vlajkov/logger/logger"
+	"github.com/microcosm-cc/bluemonday"
 	"post-service/dto"
 	"post-service/http/middleware"
 	"post-service/usecase"
+	"strings"
 )
 
 type FavoriteHandler interface {
@@ -47,6 +49,19 @@ func (f favoriteHandler) RemovePostFromFavorites(context *gin.Context) {
 		context.Abort()
 		return
 	}
+
+	policy := bluemonday.UGCPolicy()
+	favoriteDTO.PostBy =  strings.TrimSpace(policy.Sanitize(favoriteDTO.PostBy))
+	favoriteDTO.PostId =  strings.TrimSpace(policy.Sanitize(favoriteDTO.PostId))
+
+	if favoriteDTO.PostBy == "" || favoriteDTO.PostId == "" {
+		f.logger.Logger.Errorf("error while verifying and validating favorite fields\n")
+		f.logger.Logger.Warnf("possible xss attack from IP address: %v\n", context.Request.Referer())
+		context.JSON(400, gin.H{"message" : "Fields are empty or xss attack happened"})
+		return
+	}
+
+
 	favoriteDTO.UserId, _ = middleware.ExtractUserId(context.Request, f.logger)
 	err := f.favoriteUseCase.RemovePostFromFavorites(favoriteDTO, context)
 
@@ -71,6 +86,18 @@ func (f favoriteHandler) AddPostToFavorite(context *gin.Context) {
 		context.Abort()
 		return
 	}
+
+	policy := bluemonday.UGCPolicy()
+	favoriteDTO.PostBy =  strings.TrimSpace(policy.Sanitize(favoriteDTO.PostBy))
+	favoriteDTO.PostId =  strings.TrimSpace(policy.Sanitize(favoriteDTO.PostId))
+
+	if favoriteDTO.PostBy == "" || favoriteDTO.PostId == "" {
+		f.logger.Logger.Errorf("error while verifying and validating favorite fields\n")
+		f.logger.Logger.Warnf("possible xss attack from IP address: %v\n", context.Request.Referer())
+		context.JSON(400, gin.H{"message" : "Fields are empty or xss attack happened"})
+		return
+	}
+
 
 	favoriteDTO.UserId, _ = middleware.ExtractUserId(context.Request, f.logger)
 	err := f.favoriteUseCase.AddPostToFavorites(favoriteDTO, context)
