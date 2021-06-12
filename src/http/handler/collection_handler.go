@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	logger "github.com/jelena-vlajkov/logger/logger"
+	"github.com/microcosm-cc/bluemonday"
 	"post-service/dto"
 	"post-service/http/middleware"
 	"post-service/usecase"
+	"strings"
 )
 
 type CollectionHandler interface {
@@ -143,6 +145,20 @@ func (c collectionHandler) AddPostToCollection(context *gin.Context) {
 		context.Abort()
 		return
 	}
+
+	policy := bluemonday.UGCPolicy()
+	collectionDTO.PostBy = strings.TrimSpace(policy.Sanitize(collectionDTO.PostBy))
+	collectionDTO.CollectionName = strings.TrimSpace(policy.Sanitize(collectionDTO.CollectionName))
+	collectionDTO.PostId = strings.TrimSpace(policy.Sanitize(collectionDTO.PostId))
+
+	if collectionDTO.PostBy == "" || collectionDTO.CollectionName == "" || collectionDTO.PostId ==  ""{
+		c.logger.Logger.Errorf("error while verifying and validating collection fields\n")
+		c.logger.Logger.Warnf("possible xss attack from IP address: %v\n", context.Request.Referer())
+		context.JSON(400, gin.H{"message" : "Fields are empty or xss attack happened"})
+		return
+	}
+
+
 	collectionDTO.UserId, _ = middleware.ExtractUserId(context.Request, c.logger)
 	err := c.collectionUseCase.AddPostToCollection(collectionDTO, context)
 

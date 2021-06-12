@@ -40,9 +40,6 @@ func (f favoriteHandler) GetFavorites(ctx *gin.Context) {
 func (f favoriteHandler) RemovePostFromFavorites(context *gin.Context) {
 	f.logger.Logger.Println("Handling REMOVING POST FROM FAVORITES")
 	var favoriteDTO dto.FavoriteDTO
-	policy := bluemonday.UGCPolicy();
-	favoriteDTO.PostBy =  strings.TrimSpace(policy.Sanitize(favoriteDTO.PostBy))
-	favoriteDTO.PostId =  strings.TrimSpace(policy.Sanitize(favoriteDTO.PostId))
 
 	decoder := json.NewDecoder(context.Request.Body)
 
@@ -52,6 +49,19 @@ func (f favoriteHandler) RemovePostFromFavorites(context *gin.Context) {
 		context.Abort()
 		return
 	}
+
+	policy := bluemonday.UGCPolicy()
+	favoriteDTO.PostBy =  strings.TrimSpace(policy.Sanitize(favoriteDTO.PostBy))
+	favoriteDTO.PostId =  strings.TrimSpace(policy.Sanitize(favoriteDTO.PostId))
+
+	if favoriteDTO.PostBy == "" || favoriteDTO.PostId == "" {
+		f.logger.Logger.Errorf("error while verifying and validating favorite fields\n")
+		f.logger.Logger.Warnf("possible xss attack from IP address: %v\n", context.Request.Referer())
+		context.JSON(400, gin.H{"message" : "Fields are empty or xss attack happened"})
+		return
+	}
+
+
 	favoriteDTO.UserId, _ = middleware.ExtractUserId(context.Request, f.logger)
 	err := f.favoriteUseCase.RemovePostFromFavorites(favoriteDTO, context)
 
@@ -67,9 +77,6 @@ func (f favoriteHandler) RemovePostFromFavorites(context *gin.Context) {
 func (f favoriteHandler) AddPostToFavorite(context *gin.Context) {
 	f.logger.Logger.Println("Handling ADDING POST TO FAVORITES")
 	var favoriteDTO dto.FavoriteDTO
-	policy := bluemonday.UGCPolicy();
-	favoriteDTO.PostBy =  strings.TrimSpace(policy.Sanitize(favoriteDTO.PostBy))
-	favoriteDTO.PostId =  strings.TrimSpace(policy.Sanitize(favoriteDTO.PostId))
 
 	decoder := json.NewDecoder(context.Request.Body)
 
@@ -79,6 +86,18 @@ func (f favoriteHandler) AddPostToFavorite(context *gin.Context) {
 		context.Abort()
 		return
 	}
+
+	policy := bluemonday.UGCPolicy()
+	favoriteDTO.PostBy =  strings.TrimSpace(policy.Sanitize(favoriteDTO.PostBy))
+	favoriteDTO.PostId =  strings.TrimSpace(policy.Sanitize(favoriteDTO.PostId))
+
+	if favoriteDTO.PostBy == "" || favoriteDTO.PostId == "" {
+		f.logger.Logger.Errorf("error while verifying and validating favorite fields\n")
+		f.logger.Logger.Warnf("possible xss attack from IP address: %v\n", context.Request.Referer())
+		context.JSON(400, gin.H{"message" : "Fields are empty or xss attack happened"})
+		return
+	}
+
 
 	favoriteDTO.UserId, _ = middleware.ExtractUserId(context.Request, f.logger)
 	err := f.favoriteUseCase.AddPostToFavorites(favoriteDTO, context)

@@ -75,11 +75,6 @@ func (c commentHandler) AddComment(context *gin.Context) {
 	c.logger.Logger.Println("Handling ADDING COMMENTS")
 	var commentDTO dto.CommentDTO
 
-	policy := bluemonday.UGCPolicy();
-	commentDTO.Comment =  strings.TrimSpace(policy.Sanitize(commentDTO.Comment))
-	commentDTO.PostId =  strings.TrimSpace(policy.Sanitize(commentDTO.PostId))
-	commentDTO.PostBy =  strings.TrimSpace(policy.Sanitize(commentDTO.PostBy))
-
 	decoder := json.NewDecoder(context.Request.Body)
 
 	if err := decoder.Decode(&commentDTO); err != nil {
@@ -88,6 +83,20 @@ func (c commentHandler) AddComment(context *gin.Context) {
 		context.Abort()
 		return
 	}
+
+	policy := bluemonday.UGCPolicy()
+	commentDTO.Comment =  strings.TrimSpace(policy.Sanitize(commentDTO.Comment))
+	commentDTO.PostId =  strings.TrimSpace(policy.Sanitize(commentDTO.PostId))
+	commentDTO.PostBy =  strings.TrimSpace(policy.Sanitize(commentDTO.PostBy))
+
+	if commentDTO.Comment == "" || commentDTO.PostId == "" || commentDTO.PostBy ==  ""{
+		c.logger.Logger.Errorf("error while verifying and validating comment fields\n")
+		c.logger.Logger.Warnf("possible xss attack from IP address: %v\n", context.Request.Referer())
+		context.JSON(400, gin.H{"message" : "Fields are empty or xss attack happened"})
+		return
+	}
+
+
 	commentDTO.CommentBy.Id, _ = middleware.ExtractUserId(context.Request, c.logger)
 	err := c.commentUseCase.AddComment(commentDTO, context)
 

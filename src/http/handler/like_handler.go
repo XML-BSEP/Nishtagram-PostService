@@ -40,6 +40,13 @@ func (l likeHandler) DislikePost(context *gin.Context) {
 	dislikeDTO.PostBy =  strings.TrimSpace(policy.Sanitize(dislikeDTO.PostBy))
 	dislikeDTO.PostId =  strings.TrimSpace(policy.Sanitize(dislikeDTO.PostId))
 
+	if dislikeDTO.PostBy == "" || dislikeDTO.PostId == "" {
+		l.logger.Logger.Errorf("error while verifying and validating dislike fields\n")
+		l.logger.Logger.Warnf("possible xss attack from IP address: %v\n", context.Request.Referer())
+		context.JSON(400, gin.H{"message" : "Fields are empty or xss attack happened"})
+		return
+	}
+
 	err := l.likeUseCase.DislikePost(dislikeDTO, context)
 
 	if err != nil {
@@ -64,11 +71,19 @@ func (l likeHandler) RemoveLike(context *gin.Context) {
 		return
 	}
 
-	likeDTO.UserId, _ = middleware.ExtractUserId(context.Request, l.logger)
-
 	policy := bluemonday.UGCPolicy();
 	likeDTO.PostBy =  strings.TrimSpace(policy.Sanitize(likeDTO.PostBy))
 	likeDTO.PostId =  strings.TrimSpace(policy.Sanitize(likeDTO.PostId))
+
+	if likeDTO.PostBy == "" || likeDTO.PostId == "" {
+		l.logger.Logger.Errorf("error while verifying and validating like fields\n")
+		l.logger.Logger.Warnf("possible xss attack from IP address: %v\n", context.Request.Referer())
+		context.JSON(400, gin.H{"message" : "Fields are empty or xss attack happened"})
+		return
+	}
+
+	likeDTO.UserId, _ = middleware.ExtractUserId(context.Request, l.logger)
+
 
 	err := l.likeUseCase.RemoveLike(likeDTO, context)
 
@@ -97,6 +112,14 @@ func (l likeHandler) RemoveDislike(context *gin.Context) {
 	dislikeDTO.PostBy =  strings.TrimSpace(policy.Sanitize(dislikeDTO.PostBy))
 	dislikeDTO.PostId =  strings.TrimSpace(policy.Sanitize(dislikeDTO.PostId))
 
+	if dislikeDTO.PostBy == "" || dislikeDTO.PostId == "" {
+		l.logger.Logger.Errorf("error while verifying and validating dislike fields\n")
+		l.logger.Logger.Warnf("possible xss attack from IP address: %v\n", context.Request.Referer())
+		context.JSON(400, gin.H{"message" : "Fields are empty or xss attack happened"})
+		return
+	}
+
+
 	dislikeDTO.UserId, _ = middleware.ExtractUserId(context.Request, l.logger)
 	err := l.likeUseCase.RemoveDislike(dislikeDTO, context)
 
@@ -122,10 +145,18 @@ func (l likeHandler) LikePost(context *gin.Context) {
 		return
 	}
 
-	likeDTO.UserId, _ = middleware.ExtractUserId(context.Request, l.logger)
 	policy := bluemonday.UGCPolicy();
 	likeDTO.PostBy =  strings.TrimSpace(policy.Sanitize(likeDTO.PostBy))
 	likeDTO.PostId =  strings.TrimSpace(policy.Sanitize(likeDTO.PostId))
+	if likeDTO.PostBy == "" || likeDTO.PostId == "" {
+		l.logger.Logger.Errorf("error while verifying and validating like fields\n")
+		l.logger.Logger.Warnf("possible xss attack from IP address: %v\n", context.Request.Referer())
+		context.JSON(400, gin.H{"message" : "Fields are empty or xss attack happened"})
+		return
+	}
+
+	likeDTO.UserId, _ = middleware.ExtractUserId(context.Request, l.logger)
+
 
 	err := l.likeUseCase.LikePost(likeDTO, context)
 
