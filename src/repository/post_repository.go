@@ -36,7 +36,7 @@ const (
 	DeletePost        = "UPDATE post_keyspace.Posts SET deleted = true WHERE profile_id = ? AND id = ?;"
 	IfDeletedOrBanned = "SELECT banned, deleted FROM post_keyspace.Posts WHERE profile_id = ? AND id = ?;"
 	SeeIfPostExists   = "SELECT count(*) FROM post_keyspace.Posts WHERE id = ? AND profile_id = ?;"
-	GetPostByIdForSearch = "SELECT id, profile_id, type, media, deleted, banned FROM post_keyspace.Posts WHERE id = ? ALLOW FILTERING;"
+	GetPostByIdForSearch = "SELECT id, profile_id, type, media, deleted, banned FROM post_keyspace.Posts WHERE profile_id = ? and id = ?;"
 
 	)
 type PostRepo interface {
@@ -47,7 +47,7 @@ type PostRepo interface {
 	GetPostsById(userId string, postId string, ctx context.Context) (dto.PostDTO, error)
 	SeeIfPostDeletedOrBanned(userId string, postId string, ctx context.Context) bool
 	GetPostsInDateTimeRange(userId string, timeRange time.Time, ctx context.Context) []string
-	GetPostByIdForSearch(id string, ctx context.Context) (dto.PostSearchDTO, string)
+	GetPostByIdForSearch(profileId string, id string, ctx context.Context) (dto.PostSearchDTO, string)
 
 }
 
@@ -170,27 +170,25 @@ func (p postRepository) DeletePost(req dto.DeletePostDTO, ctx context.Context) e
 	return nil
 }
 
-func (p postRepository) GetPostByIdForSearch(id string, ctx context.Context) (dto.PostSearchDTO, string) {
+func (p postRepository) GetPostByIdForSearch(profileId string, id string, ctx context.Context) (dto.PostSearchDTO, string) {
 
-	iter := p.cassandraSession.Query(GetPostByIdForSearch, id).Iter().Scanner()
+	iter := p.cassandraSession.Query(GetPostByIdForSearch, profileId, id).Iter().Scanner()
 	var postSearch dto.PostSearchDTO
 	var idp string
-	var profileId string
+	var profileIdp string
 	var types string
 	var media []string
 	var deleted bool
 	var banned bool
 
 	for iter.Next() {
-		iter.Scan(&idp, &profileId, &types, &media, &banned, &deleted)
+		iter.Scan(&idp, &profileIdp, &types, &media, &banned, &deleted)
 		if banned == false && deleted == false {
 			postSearch = dto.NewPostSearchDTO(idp, types, media)
 		}
 	}
 
-
-
-	return postSearch, profileId
+	return postSearch, profileIdp
 
 }
 

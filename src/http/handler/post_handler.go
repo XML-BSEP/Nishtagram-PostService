@@ -234,8 +234,9 @@ func (p postHandler) AddPost(context *gin.Context) {
 }
 
 func (p postHandler) GetPostByIdForSearch(ctx *gin.Context) {
+
 	Ids := struct{
-		Id []string `json:"ids"`
+		Id []dto.PostProfileId `json:"ids"`
 	}{}
 
 	decoder := json.NewDecoder(ctx.Request.Body)
@@ -249,7 +250,7 @@ func (p postHandler) GetPostByIdForSearch(ctx *gin.Context) {
 
 	var posts []dto.PostSearchDTO
 	for _, id := range Ids.Id {
-		post := p.postUseCase.GetPostByIdForSearch(id, ctx)
+		post := p.postUseCase.GetPostByIdForSearch(id.ProfileId, id.PostId, ctx)
 		posts = append(posts, post)
 	}
 

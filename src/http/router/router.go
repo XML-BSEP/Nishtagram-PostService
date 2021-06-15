@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	logger "github.com/jelena-vlajkov/logger/logger"
 	"post-service/http/handler"
+	"post-service/http/middleware"
 )
 
 func NewRouter(handler handler.AppHandler, logger *logger.Logger) *gin.Engine{
@@ -11,7 +12,7 @@ func NewRouter(handler handler.AppHandler, logger *logger.Logger) *gin.Engine{
 
 	g := router.Group("/post")
 
-	//g.Use(middleware.AuthMiddleware(logger))
+	g.Use(middleware.AuthMiddleware(logger))
 
 	g.POST("createPost", handler.AddPost)
 	g.POST("createCollection", handler.CreateCollection)
