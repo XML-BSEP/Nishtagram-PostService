@@ -32,6 +32,7 @@ p, ANONYMOUS, /post/getPostsOnProfile, *
 p, ANONYMOUS, /post/getAllComments, *
 p, ANONYMOUS, /post/getPostsByUser, *
 p, ANONYMOUS, /post/getPost, *
+p, ANONYMOUS, /post/getPostByIdForSearch, *
 
 
 
