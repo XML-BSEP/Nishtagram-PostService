@@ -451,6 +451,16 @@ func (p postUseCase) GetPostByIdForSearch(profileId string, id string, ctx conte
 		post.Media[i] = base64Image
 	}
 
+	profile, err := gateway.GetUser(context.Background(), profileId)
+	if err != nil {
+		p.logger.Logger.Errorf("error while getting info for %v from user ms, error: %v\n", profileId, err)
+	}
+
+	post.Username = profile.Username
+	post.ProfilePhoto = profile.ProfilePhoto
+
+
+
 	return post
 
 }
