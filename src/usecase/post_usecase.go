@@ -28,6 +28,7 @@ type PostUseCase interface {
 	EncodeBase64(media string, userId string, ctx context.Context) (string, error)
 	DecodeBase64(media string, userId string, ctx context.Context) (string, error)
 	GetPostsOnProfile(profileId string, userRequested string, ctx context.Context) ([]dto.PostInDTO, error)
+	GetPostByIdForSearch(profileId string, id string, ctx context.Context) dto.PostSearchDTO
 }
 
 type postUseCase struct {
@@ -37,6 +38,8 @@ type postUseCase struct {
 	favoriteRepository repository.FavoritesRepo
 	logger *logger.Logger
 }
+
+
 
 func (p postUseCase) GetPostDTO(postId string, userId string, userRequestedId string, ctx context.Context) (dto.PostDTO, error) {
 	p.logger.Logger.Infof("getting post %v by user %v\n", postId, userId)
@@ -434,6 +437,31 @@ func (p postUseCase) GetPost(postId string, userId string, userRequestedId strin
 
 
 	return dto.NewPostPreviewDTO(post), nil
+
+}
+
+func (p postUseCase) GetPostByIdForSearch(profileId string, id string, ctx context.Context) dto.PostSearchDTO {
+	post, profileId := p.postRepository.GetPostByIdForSearch(profileId, id, ctx)
+
+	for i, postM := range post.Media {
+		base64Image, err := p.DecodeBase64(postM, profileId, context.Background())
+		if err != nil {
+			panic(err)
+		}
+		post.Media[i] = base64Image
+	}
+
+	profile, err := gateway.GetUser(context.Background(), profileId)
+	if err != nil {
+		p.logger.Logger.Errorf("error while getting info for %v from user ms, error: %v\n", profileId, err)
+	}
+
+	post.Username = profile.Username
+	post.ProfilePhoto = profile.ProfilePhoto
+
+
+
+	return post
 
 }
 

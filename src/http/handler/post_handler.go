@@ -21,12 +21,15 @@ type PostHandler interface {
 	GenerateUserFeed(context *gin.Context)
 	GetPostsOnProfile(context *gin.Context)
 	GetPostById(ctx *gin.Context)
+	GetPostByIdForSearch(ctx *gin.Context)
 }
 
 type postHandler struct {
 	postUseCase usecase.PostUseCase
 	logger *logger.Logger
 }
+
+
 
 func (p postHandler) GetPostById(ctx *gin.Context) {
 	p.logger.Logger.Println("Handling GETTING POST BY ID")
@@ -228,6 +231,30 @@ func (p postHandler) AddPost(context *gin.Context) {
 	}
 
 	context.JSON(200, "ok")
+}
+
+func (p postHandler) GetPostByIdForSearch(ctx *gin.Context) {
+
+	Ids := struct{
+		Id []dto.PostProfileId `json:"ids"`
+	}{}
+
+	decoder := json.NewDecoder(ctx.Request.Body)
+
+	if err := decoder.Decode(&Ids); err != nil {
+		p.logger.Logger.Errorf("error while decoding json, error: %v\n", err)
+		ctx.JSON(400, "invalid request")
+		ctx.Abort()
+		return
+	}
+
+	var posts []dto.PostSearchDTO
+	for _, id := range Ids.Id {
+		post := p.postUseCase.GetPostByIdForSearch(id.ProfileId, id.PostId, ctx)
+		posts = append(posts, post)
+	}
+
+	ctx.JSON(200, posts)
 }
 
 
