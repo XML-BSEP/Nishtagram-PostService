@@ -100,6 +100,8 @@ func SeedLikes(session *gocql.Session) {
 	if err != nil {
 		fmt.Println(err)
 	}
+
+
 	var id string
 	var profile_id string
 	var timestamp time.Time
@@ -114,6 +116,13 @@ func SeedLikes(session *gocql.Session) {
 		fmt.Println(err)
 	}
 
+	err = session.Query(repository.InsertIntoShowLikesTable,  "424935b1-766c-4f99-b306-9263731518bc", "4752f49f-3011-44af-9c62-2a6f4086233d",  "e2b5f92e-c31b-11eb-8529-0242ac130003", time.Now(),).Exec()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+
+
 	err = session.Query(repository.InsertDislikeStatement, "4752f49f-3011-44af-9c62-2a6f4086233d", time.Now(), "43420055-3174-4c2a-9823-a8f060d644c3").Exec()
 
 	if err != nil {
@@ -124,6 +133,10 @@ func SeedLikes(session *gocql.Session) {
 		fmt.Println(err)
 	}
 
+	err = session.Query(repository.InsertIntoShowDislikesTable,  "424935b1-766c-4f99-b306-9263731518bc", "4752f49f-3011-44af-9c62-2a6f4086233d",  "e2b5f92e-c31b-11eb-8529-0242ac130003", time.Now(),).Exec()
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	err = session.Query(repository.InsertDislikeStatement, "d459e0f2-ab61-48e8-a593-29933ce99525", time.Now(), "424935b1-766c-4f99-b306-9263731518bc").Exec()
 	iter = session.Query(repository.GetPrimaryKeysById, "d459e0f2-ab61-48e8-a593-29933ce99525").Iter()
@@ -138,6 +151,14 @@ func SeedLikes(session *gocql.Session) {
 	if err != nil {
 		fmt.Println(err)
 	}
+
+
+	err = session.Query(repository.InsertIntoShowDislikesTable,  "424935b1-766c-4f99-b306-9263731518bc", "d459e0f2-ab61-48e8-a593-29933ce99525", "424935b1-766c-4f99-b306-9263731518bc", time.Now(),).Exec()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+
 
 }
 

@@ -21,7 +21,10 @@ type PostHandler interface {
 	GenerateUserFeed(context *gin.Context)
 	GetPostsOnProfile(context *gin.Context)
 	GetPostById(ctx *gin.Context)
+	GetLikedMedia(ctx *gin.Context)
+	GetDislikedMedia(ctx *gin.Context)
 	GetPostByIdForSearch(ctx *gin.Context)
+
 }
 
 type postHandler struct {
@@ -29,7 +32,33 @@ type postHandler struct {
 	logger *logger.Logger
 }
 
+func (p postHandler) GetLikedMedia(ctx *gin.Context) {
+	userId, _ := middleware.ExtractUserId(ctx.Request, p.logger)
 
+	posts, err := p.postUseCase.GetAllLikedMedia(userId, ctx)
+
+	if err != nil {
+		ctx.JSON(500, gin.H{"message":"server error"})
+		ctx.Abort()
+		return
+	}
+
+	ctx.JSON(200, posts)
+}
+
+func (p postHandler) GetDislikedMedia(ctx *gin.Context) {
+	userId, _ := middleware.ExtractUserId(ctx.Request, p.logger)
+
+	posts, err := p.postUseCase.GetAllDislikedMedia(userId, ctx)
+
+	if err != nil {
+		ctx.JSON(500, gin.H{"message":"server error"})
+		ctx.Abort()
+		return
+	}
+
+	ctx.JSON(200, posts)
+}
 
 func (p postHandler) GetPostById(ctx *gin.Context) {
 	p.logger.Logger.Println("Handling GETTING POST BY ID")

@@ -6,6 +6,7 @@ type Dislike struct {
 	PostId string
 	Profile Profile
 	Timestamp time.Time
+	PostBy Profile
 }
 
 func NewDislike(postId string, profileId string, timestamp time.Time) Dislike {
