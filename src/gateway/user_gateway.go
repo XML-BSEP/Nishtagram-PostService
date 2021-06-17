@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-resty/resty/v2"
+	"os"
 	"post-service/dto"
 )
 
@@ -27,12 +28,15 @@ func GetUser(ctx context.Context, userId string) (dto.ProfileUsernameImageDTO, e
 
 func IsProfilePrivate(ctx context.Context, userId string) (bool, error) {
 	client := resty.New()
-
+	domain := os.Getenv("USER_DOMAIN")
+	if domain == "" {
+		domain = "127.0.0.1"
+	}
 	resp, err := client.R().
 		SetBody(gin.H{"id" : userId}).
 		SetContext(ctx).
 		EnableTrace().
-		Post("https://localhost:8082/isPrivate")
+		Post("https://" + domain + ":8082/isPrivate")
 
 	if err != nil {
 		return false, err
