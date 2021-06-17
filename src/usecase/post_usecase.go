@@ -28,6 +28,8 @@ type PostUseCase interface {
 	EncodeBase64(media string, userId string, ctx context.Context) (string, error)
 	DecodeBase64(media string, userId string, ctx context.Context) (string, error)
 	GetPostsOnProfile(profileId string, userRequested string, ctx context.Context) ([]dto.PostInDTO, error)
+	GetAllLikedMedia(profileId string, ctx context.Context) ([]dto.PostDTO, error)
+	GetAllDislikedMedia(profileId string, ctx context.Context) ([]dto.PostDTO, error)
 }
 
 type postUseCase struct {
@@ -36,6 +38,38 @@ type postUseCase struct {
 	collectionRepository repository.CollectionRepo
 	favoriteRepository repository.FavoritesRepo
 	logger *logger.Logger
+}
+
+func (p postUseCase) GetAllLikedMedia(profileId string, ctx context.Context) ([]dto.PostDTO, error) {
+	likedMedia, _ := p.likeRepository.GetLikedMedia(profileId, ctx)
+
+	var retVal []dto.PostDTO
+
+	for _, m := range likedMedia {
+		post, err := p.GetPostDTO(m.PostId, m.PostBy.Id, m.Profile.Id, ctx)
+		if err != nil {
+			continue
+		}
+		retVal = append(retVal, post)
+	}
+
+	return retVal, nil
+}
+
+func (p postUseCase) GetAllDislikedMedia(profileId string, ctx context.Context) ([]dto.PostDTO, error) {
+	likedMedia, _ := p.likeRepository.GetDislikedMedia(profileId, ctx)
+
+	var retVal []dto.PostDTO
+
+	for _, m := range likedMedia {
+		post, err := p.GetPostDTO(m.PostId, m.PostBy.Id, m.Profile.Id, ctx)
+		if err != nil {
+			continue
+		}
+		retVal = append(retVal, post)
+	}
+
+	return retVal, nil
 }
 
 func (p postUseCase) GetPostDTO(postId string, userId string, userRequestedId string, ctx context.Context) (dto.PostDTO, error) {

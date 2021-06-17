@@ -42,6 +42,8 @@ func NewRouter(handler handler.AppHandler, logger *logger.Logger) *gin.Engine{
 	g.GET("getAllCollections", handler.GetAllCollections)
 	g.POST("getPostsInCollection", handler.GetCollection)
 	g.GET("getFavorites", handler.GetFavorites)
+	g.GET("likedMedia", handler.GetLikedMedia)
+	g.GET("dislikedMedia", handler.GetDislikedMedia)
 
 
 

@@ -11,6 +11,16 @@ import (
 const (
 	CreateLikeTable = "CREATE TABLE if not exists post_keyspace.Likes (post_id text, timestamp timestamp, profile_id text, " +
 		"PRIMARY KEY (post_id, profile_id));"
+	CreateShowLikesTable = "CREATE TABLE IF NOT EXISTS post_keyspace.LikesToShow (profile_id text, post_id text, post_by text, timestamp timestamp, " +
+		"PRIMARY KEY (profile_id, post_id)) WITH CLUSTERING ORDER BY (post_id ASC);"
+	CreateShowDislikesTable = "CREATE TABLE IF NOT EXISTS post_keyspace.DislikesToShow (profile_id text, post_id text, post_by text, timestamp timestamp, " +
+		"PRIMARY KEY (profile_id, post_id)) WITH CLUSTERING ORDER BY (post_id ASC);"
+	InsertIntoShowDislikesTable = "INSERT INTO post_keyspace.DislikesToShow (profile_id, post_id, post_by, timestamp) VALUES (?, ?, ?, ?) IF NOT EXISTS;"
+	InsertIntoShowLikesTable = "INSERT INTO post_keyspace.LikesToShow (profile_id, post_id, post_by, timestamp) VALUES (?, ?, ?, ?) IF NOT EXISTS;"
+	DeleteFromShowDislikesTable = "DELETE FROM post_keyspace.DislikesToShow WHERE profile_id = ? AND post_id = ?;"
+	DeleteFromShowLikesTable = "DELETE FROM post_keyspace.LikesToShow WHERE profile_id = ? AND post_id = ?;"
+	GetAllLikedMedia = "SELECT profile_id, post_id, post_by, timestamp FROM post_keyspace.LikesToShow WHERE profile_id = ?"
+	GetAllDislikedMedia = "SELECT profile_id, post_id, post_by, timestamp FROM post_keyspace.DislikesToShow WHERE profile_id = ?"
 	CreateDislikeTable = "CREATE TABLE if not exists post_keyspace.Dislikes (post_id text, timestamp timestamp, profile_id text, " +
 		"PRIMARY KEY (post_id, profile_id));"
 	InsertLikeStatement = "INSERT INTO post_keyspace.Likes (post_id, timestamp, profile_id) VALUES (?, ?, ?) IF NOT EXISTS;"
@@ -32,11 +42,41 @@ type LikeRepo interface {
 	GetDislikesForPost(postId string, ctx context.Context) ([]domain.Dislike, error)
 	SeeIfLikeExists(postId string, profileId string, ctx context.Context) bool
 	SeeIfDislikeExists(postId string, profileId string, ctx context.Context) bool
+	GetLikedMedia(profileId string, ctx context.Context) ([]domain.Like, error)
+	GetDislikedMedia(profileId string, ctx context.Context) ([]domain.Dislike, error)
 }
 
 type likeRepository struct {
 	cassandraSession *gocql.Session
 	logger *logger.Logger
+}
+
+func (l likeRepository) GetLikedMedia(profileId string, ctx context.Context) ([]domain.Like, error) {
+	var postId, likeBy, postBy string
+	var timestamp time.Time
+	var retVal []domain.Like
+	iter := l.cassandraSession.Query(GetAllLikedMedia, profileId).Iter().Scanner()
+
+	for iter.Next() {
+		iter.Scan(&likeBy, &postId, &postBy, &timestamp)
+		retVal = append(retVal, domain.Like{PostId: postId, Profile: domain.Profile{Id: likeBy}, PostBy: domain.Profile{Id: postBy}, Timestamp: timestamp})
+	}
+
+	return retVal, nil
+}
+
+func (l likeRepository) GetDislikedMedia(profileId string, ctx context.Context) ([]domain.Dislike, error) {
+	var postId, likeBy, postBy string
+	var timestamp time.Time
+	var retVal []domain.Dislike
+	iter := l.cassandraSession.Query(GetAllDislikedMedia, profileId).Iter().Scanner()
+
+	for iter.Next() {
+		iter.Scan(&likeBy, &postId, &postBy, &timestamp)
+		retVal = append(retVal, domain.Dislike{PostId: postId, Profile: domain.Profile{Id: likeBy}, PostBy: domain.Profile{Id: postBy}, Timestamp: timestamp})
+	}
+
+	return retVal, nil
 }
 
 func (l likeRepository) SeeIfLikeExists(postId string, profileId string, ctx context.Context) bool {
@@ -86,6 +126,11 @@ func (l likeRepository) LikePost(postId string, postBy string, profile domain.Pr
 		return err
 	}
 
+	err = l.cassandraSession.Query(InsertIntoShowLikesTable, profile.Id, postId, postBy, time.Now() ).Exec()
+	if err != nil {
+		return err
+	}
+
 	var numOfLikes int
 	iter := l.cassandraSession.Query(GetNumOfLikesForPost, postId, postBy).Iter()
 
@@ -108,6 +153,14 @@ func (l likeRepository) DislikePost(postId string, postBy string, profile domain
 	if err != nil {
 		return err
 	}
+
+
+	err = l.cassandraSession.Query(InsertIntoShowDislikesTable, profile.Id, postId, postBy, time.Now() ).Exec()
+	if err != nil {
+		return err
+	}
+
+
 	var numOfDislikes int
 	iter := l.cassandraSession.Query(GetNumOfDislikesForPost, postId, postBy).Iter()
 
@@ -129,6 +182,14 @@ func (l likeRepository) RemoveLike(postId string, postBy string, profile domain.
 	if err != nil {
 		return err
 	}
+
+
+	err = l.cassandraSession.Query(DeleteFromShowLikesTable, profile.Id, postId).Exec()
+	if err != nil {
+		return err
+	}
+
+
 	var numOfLikes int
 	iter := l.cassandraSession.Query(GetNumOfLikesForPost, postId, postBy).Iter()
 
@@ -151,6 +212,14 @@ func (l likeRepository) RemoveDislike(postId string, postBy string, profile doma
 	if err != nil {
 		return err
 	}
+
+
+
+	err = l.cassandraSession.Query(DeleteFromShowDislikesTable, profile.Id, postId).Exec()
+	if err != nil {
+		return err
+	}
+
 	var numOfDislikes int
 	iter := l.cassandraSession.Query(GetNumOfDislikesForPost, postId, postBy).Iter()
 
@@ -178,6 +247,16 @@ func NewLikeRepository(cassandraSession *gocql.Session, logger *logger.Logger) L
 		return nil
 	}
 	err = l.cassandraSession.Query(CreateDislikeTable).Exec()
+	if err != nil {
+		return nil
+	}
+
+	err = l.cassandraSession.Query(CreateShowLikesTable).Exec()
+	if err != nil {
+		return nil
+	}
+
+	err = l.cassandraSession.Query(CreateShowDislikesTable).Exec()
 	if err != nil {
 		return nil
 	}

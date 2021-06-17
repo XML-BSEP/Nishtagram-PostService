@@ -1586,3 +1586,4 @@
 {"data":{},"file":"post_usecase.go:124","func":"post-service/usecase.postUseCase.DecodeBase64","level":"info","msg":"decoding base64 for image shone.jpg and user 424935b1-766c-4f99-b306-9263731518bc\n","time":"2021-06-13 02:10:42"}
 {"data":{},"file":"post_usecase.go:124","func":"post-service/usecase.postUseCase.DecodeBase64","level":"info","msg":"decoding base64 for image pablo.jpg and user a2c2f993-dc32-4a82-82ed-a5f6866f7d03\n","time":"2021-06-13 02:10:42"}
 {"data":{},"file":"post_usecase.go:124","func":"post-service/usecase.postUseCase.DecodeBase64","level":"info","msg":"decoding base64 for image pablo.jpg and user 43420055-3174-4c2a-9823-a8f060d644c3\n","time":"2021-06-13 02:10:42"}
+{"data":{},"file":"authMiddleware.go:40","func":"post-service/http/middleware.AuthMiddleware.func1","level":"error","msg":"forbidden request from IP address: ","time":"2021-06-18 01:19:53"}
