@@ -30,6 +30,7 @@ type PostUseCase interface {
 	GetPostsOnProfile(profileId string, userRequested string, ctx context.Context) ([]dto.PostInDTO, error)
 	GetAllLikedMedia(profileId string, ctx context.Context) ([]dto.PostDTO, error)
 	GetAllDislikedMedia(profileId string, ctx context.Context) ([]dto.PostDTO, error)
+	GetPostByIdForSearch(profileId string, id string, ctx context.Context) dto.PostSearchDTO
 }
 
 type postUseCase struct {
@@ -468,6 +469,31 @@ func (p postUseCase) GetPost(postId string, userId string, userRequestedId strin
 
 
 	return dto.NewPostPreviewDTO(post), nil
+
+}
+
+func (p postUseCase) GetPostByIdForSearch(profileId string, id string, ctx context.Context) dto.PostSearchDTO {
+	post, profileId := p.postRepository.GetPostByIdForSearch(profileId, id, ctx)
+
+	for i, postM := range post.Media {
+		base64Image, err := p.DecodeBase64(postM, profileId, context.Background())
+		if err != nil {
+			panic(err)
+		}
+		post.Media[i] = base64Image
+	}
+
+	profile, err := gateway.GetUser(context.Background(), profileId)
+	if err != nil {
+		p.logger.Logger.Errorf("error while getting info for %v from user ms, error: %v\n", profileId, err)
+	}
+
+	post.Username = profile.Username
+	post.ProfilePhoto = profile.ProfilePhoto
+
+
+
+	return post
 
 }
 

@@ -44,7 +44,7 @@ func NewRouter(handler handler.AppHandler, logger *logger.Logger) *gin.Engine{
 	g.GET("getFavorites", handler.GetFavorites)
 	g.GET("likedMedia", handler.GetLikedMedia)
 	g.GET("dislikedMedia", handler.GetDislikedMedia)
-
+	g.POST("getPostByIdForSearch", handler.GetPostByIdForSearch)
 
 
 	return router
