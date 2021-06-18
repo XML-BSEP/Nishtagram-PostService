@@ -16,7 +16,7 @@ func NewRouter(handler handler.AppHandler, logger *logger.Logger) *gin.Engine{
 
 	g.POST("createPost", handler.AddPost)
 	g.POST("createCollection", handler.CreateCollection)
-	g.POST("createReport", handler.ReportPost)
+	g.POST("reportPost", handler.ReportPost)
 	g.POST("likePost", handler.LikePost)
 	g.POST("dislikePost", handler.DislikePost)
 	g.POST("removeLike", handler.RemoveLike)
@@ -45,6 +45,8 @@ func NewRouter(handler handler.AppHandler, logger *logger.Logger) *gin.Engine{
 	g.GET("likedMedia", handler.GetLikedMedia)
 	g.GET("dislikedMedia", handler.GetDislikedMedia)
 	g.POST("getPostByIdForSearch", handler.GetPostByIdForSearch)
+
+	g.GET("getAllReportTypes", handler.GetAllReportTypes)
 
 
 	return router

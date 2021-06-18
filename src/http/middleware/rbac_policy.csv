@@ -4,7 +4,7 @@ p, ADMIN, /post/getApprovedReports, *
 p, ADMIN, /post/getRejectedReports, *
 p, USER, /post/createPost, *
 p, USER, /post/createCollection, *
-p, USER, /post/createReport, *
+p, USER, /post/reportPost, *
 p, USER, /post/likePost, *
 p, USER, /post/dislikePost, *
 p, USER, /post/removeLike, *
@@ -36,6 +36,7 @@ p, USER, /post/likedMedia, *
 p, USER, /post/dislikedMedia, *
 p, ANONYMOUS, /post/getPostByIdForSearch, *
 p, USER, /post/getPostByIdForSearch, *
+p, USER, /post/getAllReportTypes, *
 
 
 

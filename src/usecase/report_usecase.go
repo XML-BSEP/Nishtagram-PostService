@@ -12,10 +12,15 @@ type PostReportUseCase interface {
 	GetAllPendingReports(ctx context.Context) ([]dto.ReportDTO, error)
 	GetAllApprovedReports(ctx context.Context) ([]dto.ReportDTO, error)
 	GetAllRejectedReports(ctx context.Context) ([]dto.ReportDTO, error)
+	GetAllReportType(ctx context.Context) ([]string, error)
 }
 
 type postReportUseCase struct {
 	postReportRepository repository.ReportRepo
+}
+
+func (p postReportUseCase) GetAllReportType(ctx context.Context) ([]string, error) {
+	return p.postReportRepository.GetAllReportTypes(ctx)
 }
 
 func (p postReportUseCase) ReportPost(report dto.CreateReportDTO, ctx context.Context) error {

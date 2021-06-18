@@ -47,15 +47,15 @@ func SeedAllReportType(session *gocql.Session) {
 		fmt.Println(err)
 	}
 
-	err = session.Query(InsertIntoReportTypes, "NUDITY").Exec()
-	err = session.Query(InsertIntoReportTypes, "HATE_SPEECH").Exec()
-	err = session.Query(InsertIntoReportTypes, "VIOLENCE_ORG").Exec()
-	err = session.Query(InsertIntoReportTypes, "ILLEGAL_SALES").Exec()
-	err = session.Query(InsertIntoReportTypes, "BULLYING").Exec()
-	err = session.Query(InsertIntoReportTypes, "VIOLATION_IP").Exec()
-	err = session.Query(InsertIntoReportTypes, "SCAM").Exec()
-	err = session.Query(InsertIntoReportTypes, "SELF_HARM").Exec()
-	err = session.Query(InsertIntoReportTypes, "FALSE_INFO").Exec()
+	err = session.Query(InsertIntoReportTypes, "Nudity").Exec()
+	err = session.Query(InsertIntoReportTypes, "Hate Speech").Exec()
+	err = session.Query(InsertIntoReportTypes, "Violence Organization").Exec()
+	err = session.Query(InsertIntoReportTypes, "Illegal Sales").Exec()
+	err = session.Query(InsertIntoReportTypes, "Bullying").Exec()
+	err = session.Query(InsertIntoReportTypes, "Violation IP").Exec()
+	err = session.Query(InsertIntoReportTypes, "Scam").Exec()
+	err = session.Query(InsertIntoReportTypes, "Self Harm").Exec()
+	err = session.Query(InsertIntoReportTypes, "False Information").Exec()
 
 	if err != nil {
 		fmt.Println(err)
