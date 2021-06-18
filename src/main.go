@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	logger "github.com/jelena-vlajkov/logger/logger"
+	"os"
 	_ "post-service/gateway"
 	router2 "post-service/http/router"
 	"post-service/infrastructure/cassandra_config"
@@ -22,7 +23,16 @@ func main() {
 	handler := i.NewAppHandler()
 
 	router := router2.NewRouter(handler, logger)
-
-	router.RunTLS(":8083", "certificate/cert.pem", "certificate/key.pem")
+	if os.Getenv("DOCKER_ENV") == "" {
+		err := router.RunTLS(":8083", "certificate/cert.pem", "certificate/key.pem")
+		if err != nil {
+			return 
+		}
+	} else {
+		err := router.Run(":8083")
+		if err != nil {
+			return 
+		}
+	}
 
 }
