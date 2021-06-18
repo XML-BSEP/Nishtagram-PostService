@@ -18,6 +18,7 @@ const (
 	DeleteReport = "DELETE FROM post_keyspace.Reports where status = ? and id = ?;"
 	GetPendingReportById = "SELECT id, post_id, reported_post_by, reported_by, type, timestamp FROM post_keyspace.Reports " +
 		"WHERE status = 'CREATED' AND id = ?;"
+	SelectAllTypes = "SELECT * FROM post_keyspace.ReportType LIMIT 300000000;"
 )
 
 type ReportRepo interface {
@@ -26,10 +27,30 @@ type ReportRepo interface {
 	GetAllPendingReports(ctx context.Context) ([]dto.ReportDTO, error)
 	GetAllApprovedReports(ctx context.Context) ([]dto.ReportDTO, error)
 	GetAllRejectedReports(ctx context.Context) ([]dto.ReportDTO, error)
+	GetAllReportTypes(ctx context.Context) ([]string, error)
 }
 
 type reportRepository struct {
 	cassandraSession *gocql.Session
+}
+
+func (r reportRepository) GetAllReportTypes(ctx context.Context) ([]string, error) {
+	var retVal []string
+
+	iter := r.cassandraSession.Query(SelectAllTypes).Iter().Scanner()
+
+	var reportType string
+	for iter.Next() {
+
+		err := iter.Scan(&reportType)
+		if err != nil {
+			return nil, err
+		}
+
+		retVal = append(retVal, reportType)
+	}
+
+	return retVal, nil
 }
 
 func (r reportRepository) ReviewReport(report dto.ReviewReportDTO, ctx context.Context) error {

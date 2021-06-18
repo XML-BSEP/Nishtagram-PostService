@@ -65,7 +65,7 @@ func (i interactor) NewCollectionUseCase() usecase.CollectionUseCase {
 }
 
 func (i interactor) NewReportPostHandler() handler.ReportPostHandler {
-	return handler.NewReportPostHandler(i.NewReportPostUseCase())
+	return handler.NewReportPostHandler(i.NewReportPostUseCase(), i.logger)
 }
 
 func (i interactor) NewLikeHandler() handler.LikeHandler {
