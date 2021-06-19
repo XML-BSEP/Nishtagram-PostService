@@ -26,9 +26,9 @@ func NewCassandraSession(logger *logger.Logger) (*gocql.Session, error) {
 	init_viper()
 	var domain string
 	if viper.GetBool(`docker`){
-		domain = viper.GetString(`server.domain_docker`) + ":" + viper.GetString(`server.port`)
+		domain = viper.GetString(`server.domain_docker`) + ":" + viper.GetString(`server.port_docker`)
 	}else{
-		domain = viper.GetString(`server.domain_localhost`) + ":" + viper.GetString(`server.port`)
+		domain = viper.GetString(`server.domain_localhost`) + ":" + viper.GetString(`server.port_localhost`)
 	}
 	cluster := gocql.NewCluster(domain)
 	cluster.ProtoVersion, _ = strconv.Atoi(viper.GetString(`proto_version`))
