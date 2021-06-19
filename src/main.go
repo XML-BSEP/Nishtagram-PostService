@@ -24,7 +24,7 @@ func main() {
 
 	router := router2.NewRouter(handler, logger)
 	if os.Getenv("DOCKER_ENV") == "" {
-		err := router.RunTLS(":8083", "certificate/cert.pem", "certificate/key.pem")
+		err := router.RunTLS(":8083", "src/certificate/cert.pem", "src/certificate/key.pem")
 		if err != nil {
 			return 
 		}
