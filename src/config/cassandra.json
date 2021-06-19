@@ -4,7 +4,9 @@
   "server" : {
     "domain_localhost": "127.0.0.1",
     "domain_docker" : "cassandrapost",
-    "port": 7000
+    "port_docker": 9042,
+    "port_localhost": 7000
+
   },
   "proto_version" : 4
 }
