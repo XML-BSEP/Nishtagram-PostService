@@ -4,7 +4,9 @@ import (
 	"context"
 	logger "github.com/jelena-vlajkov/logger/logger"
 	"post-service/dto"
+	"post-service/infrastructure/grpc/service/notification_service"
 	"post-service/repository"
+	pb "post-service/infrastructure/grpc/service/notification_service"
 )
 
 type CommentUseCase interface {
@@ -16,6 +18,7 @@ type CommentUseCase interface {
 type commentUseCase struct {
 	commentRepository repository.CommentRepo
 	logger *logger.Logger
+	notificationClient notification_service.NotificationClient
 }
 
 func (c commentUseCase) GetAllCommentsByPost(postId string, ctx context.Context) ([]dto.CommentDTO, error) {
@@ -31,6 +34,13 @@ func (c commentUseCase) GetAllCommentsByPost(postId string, ctx context.Context)
 func (c commentUseCase) AddComment(comment dto.CommentDTO, ctx context.Context) error {
 	c.logger.Logger.Infof("adding comment on post %v by user %v\n", comment.PostId, comment.PostBy)
 	err := c.commentRepository.CommentPost(comment, context.Background())
+	notification := &pb.NotificationMessage{
+		Sender: comment.CommentBy.Id,
+		Receiver: comment.PostBy,
+		NotificationType: pb.NotificationType_Like,
+		RedirectPath: comment.PostId,
+	}
+	_, _ = c.notificationClient.SendNotification(ctx, notification)
 	return err
 }
 
@@ -43,9 +53,10 @@ func (c commentUseCase) DeleteComment(comment dto.CommentDTO, ctx context.Contex
 	return err
 }
 
-func NewCommentUseCase(commentRepository repository.CommentRepo, logger *logger.Logger) CommentUseCase {
+func NewCommentUseCase(commentRepository repository.CommentRepo, logger *logger.Logger, client notification_service.NotificationClient) CommentUseCase {
 	return &commentUseCase{
 		commentRepository: commentRepository,
 		logger: logger,
+		notificationClient: client,
 	}
 }
