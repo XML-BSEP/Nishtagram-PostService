@@ -142,11 +142,9 @@ func (r reportRepository) GetAllRejectedReports(ctx context.Context) ([]dto.Repo
 }
 
 func (r reportRepository) ReportPost(report dto.CreateReportDTO, ctx context.Context) error {
-	id, err := uuid.NewUUID()
-	if err != nil {
-		return fmt.Errorf("error while saving report")
-	}
-	err = r.cassandraSession.Query(InsertReportStatement, id, report.PostId, time.Now(), report.ReportedBy, report.ReportedPostBy, strings.ToUpper(report.ReportType), "CREATED").Exec()
+	id := uuid.NewString()
+
+	err := r.cassandraSession.Query(InsertReportStatement, id, report.PostId, time.Now(), report.ReportedBy, report.ReportedPostBy, strings.ToUpper(report.ReportType), "CREATED").Exec()
 
 	if err != nil {
 		return err
