@@ -22,7 +22,7 @@ func GetAllUserFollowing(ctx context.Context, userId string) ([]domain.Profile, 
 		resp, _ := client.R().
 			SetBody(userDto).
 			EnableTrace().
-			Post("https://" + domain + ":8089/usersFollowings")
+			Post("http://" + domain + ":8089/usersFollowings")
 
 		var responseDTO FollowingResponseDTO
 		err := json.Unmarshal(resp.Body(), &responseDTO)

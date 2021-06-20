@@ -5,6 +5,7 @@ import (
 	logger "github.com/jelena-vlajkov/logger/logger"
 	"post-service/http/handler"
 	"post-service/infrastructure/data_seeder"
+	"post-service/infrastructure/grpc/service/notification_service"
 	"post-service/repository"
 	"post-service/usecase"
 )
@@ -38,10 +39,11 @@ type Interactor interface {
 type interactor struct {
 	cassandraSession *gocql.Session
 	logger *logger.Logger
+	notificationClient notification_service.NotificationClient
 }
 
 func (i interactor) NewPostUseCase() usecase.PostUseCase {
-	return usecase.NewPostUseCase(i.NewPostRepo(), i.NewLikeRepo(), i.NewFavoriteRepo(), i.NewCollectionRepo(), i.logger)
+	return usecase.NewPostUseCase(i.NewPostRepo(), i.NewLikeRepo(), i.NewFavoriteRepo(), i.NewCollectionRepo(), i.logger, i.notificationClient)
 }
 
 func (i interactor) NewReportPostUseCase() usecase.PostReportUseCase {
@@ -49,11 +51,11 @@ func (i interactor) NewReportPostUseCase() usecase.PostReportUseCase {
 }
 
 func (i interactor) NewLikeUseCase() usecase.LikeUseCase {
-	return usecase.NewLikeUseCase(i.NewLikeRepo(), i.logger)
+	return usecase.NewLikeUseCase(i.NewLikeRepo(), i.logger, i.notificationClient)
 }
 
 func (i interactor) NewCommentUseCase() usecase.CommentUseCase {
-	return usecase.NewCommentUseCase(i.NewCommentRepo(), i.logger)
+	return usecase.NewCommentUseCase(i.NewCommentRepo(), i.logger, i.notificationClient)
 }
 
 func (i interactor) NewFavoriteUseCase() usecase.FavoriteUseCase {
@@ -136,6 +138,6 @@ func (i interactor) NewReportRepo() repository.ReportRepo {
 	return repository.NewReportRepository(i.cassandraSession)
 }
 
-func NewInteractor(cassandraSession *gocql.Session, logger *logger.Logger) Interactor {
-	return &interactor{cassandraSession: cassandraSession, logger: logger}
+func NewInteractor(cassandraSession *gocql.Session, logger *logger.Logger, notificationClient notification_service.NotificationClient) Interactor {
+	return &interactor{cassandraSession: cassandraSession, logger: logger, notificationClient: notificationClient}
 }
