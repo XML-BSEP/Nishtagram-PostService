@@ -5,6 +5,7 @@ import (
 	logger "github.com/jelena-vlajkov/logger/logger"
 	"github.com/spf13/viper"
 	"log"
+	"os"
 	"strconv"
 	"time"
 )
@@ -25,7 +26,7 @@ const (
 func NewCassandraSession(logger *logger.Logger) (*gocql.Session, error) {
 	init_viper()
 	var domain string
-	if viper.GetBool(`docker`){
+	if os.Getenv("DOCKER_ENV") != "" {
 		domain = viper.GetString(`server.domain_docker`) + ":" + viper.GetString(`server.port_docker`)
 	}else{
 		domain = viper.GetString(`server.domain_localhost`) + ":" + viper.GetString(`server.port_localhost`)
