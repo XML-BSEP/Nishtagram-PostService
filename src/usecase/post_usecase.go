@@ -13,10 +13,10 @@ import (
 	"post-service/dto"
 	"post-service/gateway"
 	"post-service/infrastructure/grpc/service/notification_service"
+	pb "post-service/infrastructure/grpc/service/notification_service"
 	"post-service/repository"
 	"strings"
 	"time"
-	pb "post-service/infrastructure/grpc/service/notification_service"
 )
 
 type PostUseCase interface {
@@ -379,6 +379,8 @@ func (p postUseCase) AddPost(postDTO dto.CreatePostDTO, ctx context.Context) err
 
 	in := &pb.MultipleNotificationsMessage{SenderId: postDTO.UserId.UserId, NotificationType: pb.NotificationType_Post, RedirectPath: ""}
 	p.notificationClient.SendNotifications(ctx, in)
+
+
 	return p.postRepository.CreatePost(postDTO, context.Background())
 }
 
