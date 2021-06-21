@@ -5,6 +5,8 @@ import (
 	logger "github.com/jelena-vlajkov/logger/logger"
 	"post-service/domain"
 	"post-service/dto"
+	"post-service/infrastructure/grpc/service/notification_service"
+	pb "post-service/infrastructure/grpc/service/notification_service"
 	"post-service/repository"
 )
 
@@ -20,7 +22,7 @@ type LikeUseCase interface {
 type likeUseCase struct {
 	likeRepository repository.LikeRepo
 	logger *logger.Logger
-
+	notificationClient notification_service.NotificationClient
 }
 
 func (l likeUseCase) RemoveLike(dto dto.LikeDislikeDTO, ctx context.Context) error {
@@ -49,6 +51,14 @@ func (l likeUseCase) LikePost(dto dto.LikeDislikeDTO, ctx context.Context) error
 			return err
 		}
 	}
+
+	notification := &pb.NotificationMessage{
+		Sender: dto.UserId,
+		Receiver: dto.PostBy,
+		NotificationType: pb.NotificationType_Like,
+		RedirectPath: dto.PostId,
+	}
+	_, _ = l.notificationClient.SendNotification(ctx, notification)
 	return nil
 }
 
@@ -66,6 +76,14 @@ func (l likeUseCase) DislikePost(dto dto.LikeDislikeDTO, ctx context.Context) er
 			return err
 		}
 	}
+
+	notification := &pb.NotificationMessage{
+		Sender: dto.UserId,
+		Receiver: dto.PostBy,
+		NotificationType: pb.NotificationType_Dislike,
+		RedirectPath: dto.PostId,
+	}
+	_, _ = l.notificationClient.SendNotification(ctx, notification)
 	return nil
 }
 
@@ -103,6 +121,6 @@ func (l likeUseCase) GetDislikesForPost(postId string, ctx context.Context) ([]d
 }
 
 
-func NewLikeUseCase(likeRepository repository.LikeRepo, logger *logger.Logger) LikeUseCase {
-	return &likeUseCase{likeRepository: likeRepository, logger: logger}
+func NewLikeUseCase(likeRepository repository.LikeRepo, logger *logger.Logger, notificationClient notification_service.NotificationClient) LikeUseCase {
+	return &likeUseCase{likeRepository: likeRepository, logger: logger, notificationClient: notificationClient}
 }

@@ -12,9 +12,11 @@ import (
 	"post-service/domain"
 	"post-service/dto"
 	"post-service/gateway"
+	"post-service/infrastructure/grpc/service/notification_service"
 	"post-service/repository"
 	"strings"
 	"time"
+	pb "post-service/infrastructure/grpc/service/notification_service"
 )
 
 type PostUseCase interface {
@@ -28,8 +30,8 @@ type PostUseCase interface {
 	EncodeBase64(media string, userId string, ctx context.Context) (string, error)
 	DecodeBase64(media string, userId string, ctx context.Context) (string, error)
 	GetPostsOnProfile(profileId string, userRequested string, ctx context.Context) ([]dto.PostInDTO, error)
-	GetAllLikedMedia(profileId string, ctx context.Context) ([]dto.PostDTO, error)
-	GetAllDislikedMedia(profileId string, ctx context.Context) ([]dto.PostDTO, error)
+	GetAllLikedMedia(profileId string, ctx context.Context) ([]dto.PostInDTO, error)
+	GetAllDislikedMedia(profileId string, ctx context.Context) ([]dto.PostInDTO, error)
 	GetPostByIdForSearch(profileId string, id string, ctx context.Context) dto.PostSearchDTO
 }
 
@@ -40,35 +42,38 @@ type postUseCase struct {
 	favoriteRepository repository.FavoritesRepo
 	commentUseCase CommentUseCase
 	logger *logger.Logger
+	notificationClient notification_service.NotificationClient
 }
 
-func (p postUseCase) GetAllLikedMedia(profileId string, ctx context.Context) ([]dto.PostDTO, error) {
+func (p postUseCase) GetAllLikedMedia(profileId string, ctx context.Context) ([]dto.PostInDTO, error) {
 	likedMedia, _ := p.likeRepository.GetLikedMedia(profileId, ctx)
 
-	var retVal []dto.PostDTO
+	var retVal []dto.PostInDTO
 
 	for _, m := range likedMedia {
 		post, err := p.GetPostDTO(m.PostId, m.PostBy.Id, m.Profile.Id, ctx)
+		dto := dto.PostInDTO{PostId: post.Id, Posts: post.Media[0], User: post.Profile.Id}
 		if err != nil {
 			continue
 		}
-		retVal = append(retVal, post)
+		retVal = append(retVal, dto)
 	}
 
 	return retVal, nil
 }
 
-func (p postUseCase) GetAllDislikedMedia(profileId string, ctx context.Context) ([]dto.PostDTO, error) {
+func (p postUseCase) GetAllDislikedMedia(profileId string, ctx context.Context) ([]dto.PostInDTO, error) {
 	likedMedia, _ := p.likeRepository.GetDislikedMedia(profileId, ctx)
 
-	var retVal []dto.PostDTO
+	var retVal []dto.PostInDTO
 
 	for _, m := range likedMedia {
 		post, err := p.GetPostDTO(m.PostId, m.PostBy.Id, m.Profile.Id, ctx)
+		dto := dto.PostInDTO{PostId: post.Id, Posts: post.Media[0], User: post.Profile.Id}
 		if err != nil {
 			continue
 		}
-		retVal = append(retVal, post)
+		retVal = append(retVal, dto)
 	}
 
 	return retVal, nil
@@ -270,7 +275,7 @@ func (p postUseCase) GenerateUserFeed(userId string, userRequestedId string, ctx
 
 
 			profile, err := gateway.GetUser(context.Background(), post.Profile.Id)
-			if err != nil {
+			if err == nil {
 				p.logger.Logger.Errorf("error while getting user info for %v, error: %v\n", post.Profile.Id, err)
 			}
 			post.Profile = domain.Profile{Id: post.Profile.Id, Username: profile.Username, ProfilePhoto: profile.ProfilePhoto}
@@ -372,6 +377,8 @@ func (p postUseCase) AddPost(postDTO dto.CreatePostDTO, ctx context.Context) err
 		postDTO.MediaType = "IMAGE"
 	}
 
+	in := &pb.MultipleNotificationsMessage{SenderId: postDTO.UserId.UserId, NotificationType: pb.NotificationType_Post, RedirectPath: ""}
+	p.notificationClient.SendNotifications(ctx, in)
 	return p.postRepository.CreatePost(postDTO, context.Background())
 }
 
@@ -504,12 +511,13 @@ func (p postUseCase) GetPostByIdForSearch(profileId string, id string, ctx conte
 
 }
 
-func NewPostUseCase(postRepository repository.PostRepo, repo repository.LikeRepo, favoritesRepo repository.FavoritesRepo, collectionRepo repository.CollectionRepo, logger *logger.Logger) PostUseCase {
+func NewPostUseCase(postRepository repository.PostRepo, repo repository.LikeRepo, favoritesRepo repository.FavoritesRepo, collectionRepo repository.CollectionRepo, logger *logger.Logger, notificationClient notification_service.NotificationClient) PostUseCase {
 	return &postUseCase{
 		postRepository: postRepository,
 		likeRepository: repo,
 		favoriteRepository: favoritesRepo,
 		collectionRepository: collectionRepo,
 		logger: logger,
+		notificationClient: notificationClient,
 	}
 }
