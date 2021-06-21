@@ -7,6 +7,7 @@ import (
 	logger "github.com/jelena-vlajkov/logger/logger"
 	"post-service/domain"
 	"post-service/dto"
+	"post-service/gateway"
 	"time"
 )
 const (
@@ -38,7 +39,11 @@ func (c commentRepository) GetComments(postId string, ctx context.Context) ([]dt
 	for iter.Next() {
 		iter.Scan(&id, &comment, &post_id, &comment_by, &timestamp, &mentions)
 		dto := dto.CommentDTO{}
-		dto.CommentBy = domain.Profile{Id: comment_by, ProfilePhoto: "", Username: ""}
+		profile, err := gateway.GetUser(context.Background(), comment_by)
+		if err != nil {
+			c.logger.Logger.Errorf("error while getting user info for %v, error: %v\n", comment_by, err)
+		}
+		dto.CommentBy = domain.Profile{Id: comment_by, ProfilePhoto: profile.ProfilePhoto, Username: profile.Username}
 		dto.Comment = comment
 		dto.PostId = postId
 		retVal = append(retVal, dto)
