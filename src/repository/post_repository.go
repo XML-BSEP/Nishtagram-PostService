@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	logger "github.com/jelena-vlajkov/logger/logger"
 	"post-service/dto"
+	"post-service/gateway"
 	"time"
 )
 
@@ -143,6 +144,22 @@ func (p postRepository) CreatePost(req dto.CreatePostDTO, ctx context.Context) e
 	if err != nil {
 		p.logger.Logger.Errorf("error while saving post for user %v\n", req.UserId)
 		return fmt.Errorf("error while saving post")
+	}
+	if req.Location != "" {
+		postLocation := dto.PostLocationProfileDTO{PostId: postId, ProfileId: req.UserId.UserId, Location: req.Location}
+		err := gateway.SaveNewPostLocation(postLocation, ctx)
+		if err != nil {
+			p.logger.Logger.Errorf("error while sending request to save new locations")
+		}
+	}
+
+	if len(req.Hashtags) > 0 {
+		postTag := dto.PostTagProfileDTO{PostId: postId, ProfileId: req.UserId.UserId, Hashtag: req.Hashtags}
+		err := gateway.SaveNewPostTage(postTag, ctx)
+
+		if err != nil {
+			p.logger.Logger.Errorf("error while sending request to save new tags")
+		}
 	}
 	return nil
 }
