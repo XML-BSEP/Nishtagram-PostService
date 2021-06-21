@@ -15,8 +15,14 @@ import (
 
 func main() {
 	logger := logger.InitializeLogger("post-service", context.Background())
-
-	notificationClient, err := client.NewNotificationClient("127.0.0.1:8078")
+	var domain string
+	if os.Getenv("DOCKER_ENV") == "" {
+		domain = "127.0.0.1"
+	} else {
+		domain = "notificationms"
+	}
+	domain = domain + ":8078"
+	notificationClient, err := client.NewNotificationClient(domain)
 
 	if err != nil {
 		panic(err)
