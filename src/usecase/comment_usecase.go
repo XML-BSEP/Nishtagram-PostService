@@ -25,6 +25,16 @@ func (c commentUseCase) GetAllCommentsByPost(postId string, ctx context.Context)
 		c.logger.Logger.Errorf("error while getting comments for post %v, error: %v\n", postId, err)
 	}
 
+	//for i, comment := range comments {
+	//	post,err := c.postRepository.get
+	//	profile, err := gateway.GetUser(context.Background(), post.Profile.Id)
+	//	if err != nil {
+	//		p.logger.Logger.Errorf("error while getting user info for %v, error: %v\n", post.Profile.Id, err)
+	//	}
+	//	 comments[i].CommentBy.ProfilePhoto = profile.ProfilePhoto
+	//	 comments[i].CommentBy.Username = profile.Username
+	//
+	//}
 	return comments, err
 }
 
@@ -43,7 +53,7 @@ func (c commentUseCase) DeleteComment(comment dto.CommentDTO, ctx context.Contex
 	return err
 }
 
-func NewCommentUseCase(commentRepository repository.CommentRepo, logger *logger.Logger) CommentUseCase {
+func NewCommentUseCase(commentRepository repository.CommentRepo,  logger *logger.Logger) CommentUseCase {
 	return &commentUseCase{
 		commentRepository: commentRepository,
 		logger: logger,

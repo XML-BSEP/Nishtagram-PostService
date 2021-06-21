@@ -38,6 +38,7 @@ type postUseCase struct {
 	likeRepository repository.LikeRepo
 	collectionRepository repository.CollectionRepo
 	favoriteRepository repository.FavoritesRepo
+	commentUseCase CommentUseCase
 	logger *logger.Logger
 }
 
@@ -461,6 +462,12 @@ func (p postUseCase) GetPost(postId string, userId string, userRequestedId strin
 	if _, ok := favorites[post.Id]; ok {
 		post.IsBookmarked = true
 	}
+
+	profile, err := gateway.GetUser(context.Background(), post.Profile.Id)
+	if err != nil {
+		p.logger.Logger.Errorf("error while getting user info for %v, error: %v\n", post.Profile.Id, err)
+	}
+	post.Profile = domain.Profile{Id: post.Profile.Id, Username: profile.Username, ProfilePhoto: profile.ProfilePhoto}
 
 
 
