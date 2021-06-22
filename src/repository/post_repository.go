@@ -137,7 +137,7 @@ func (p postRepository) CreatePost(req dto.CreatePostDTO, ctx context.Context) e
 	currentTime := time.Now()
 
 	err := p.cassandraSession.Query(InsertIntoPostTable, postId, req.UserId.UserId, req.Caption, currentTime, 0, 0, 0, false, req.Location,
-		0.0, 0.0, req.Mentions, req.Hashtags, req.Media, req.MediaType, false).Exec()
+		0.0, 0.0, req.MentionsToAdd, req.Hashtags, req.Media, req.MediaType, false).Exec()
 
 	err = p.cassandraSession.Query(InsertIntoPostsTimestampTable, postId, req.UserId.UserId, currentTime).Exec()
 

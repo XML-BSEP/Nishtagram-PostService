@@ -378,6 +378,11 @@ func (p postUseCase) AddPost(postDTO dto.CreatePostDTO, ctx context.Context) err
 
 		postDTO.Media = media
 		postDTO.MediaType = "IMAGE"
+
+		for _, taggedUser := range postDTO.Mentions {
+			postDTO.MentionsToAdd = append(postDTO.MentionsToAdd, taggedUser.Username)
+		}
+
 	}
 
 	in := &pb.MultipleNotificationsMessage{SenderId: postDTO.UserId.UserId, NotificationType: pb.NotificationType_Post, RedirectPath: ""}
