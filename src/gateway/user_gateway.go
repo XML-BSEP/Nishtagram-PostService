@@ -59,7 +59,7 @@ func IsProfilePrivate(ctx context.Context, userId string) (bool, error) {
 			SetBody(gin.H{"id" : userId}).
 			SetContext(ctx).
 			EnableTrace().
-			Post("https://" + domain + ":8082/isPrivate")
+			Post("https://" + domain + ":8082/getPrivacyAndTagging?userId=" + userId)
 
 		if err != nil {
 			return false, err
@@ -69,18 +69,20 @@ func IsProfilePrivate(ctx context.Context, userId string) (bool, error) {
 			return false, fmt.Errorf("Err")
 		}
 
-		var privacyCheckResponseDto dto.PrivacyCheckResponseDto
+		var privacyCheckResponseDto dto.PrivacyTaggingDTO
 		if err := json.Unmarshal(resp.Body(), &privacyCheckResponseDto); err != nil {
 			return false, err
 		}
-
-		return privacyCheckResponseDto.IsPrivate, err
+		if privacyCheckResponseDto.PrivacyPermission == "Private" {
+			return false, err
+		}
+		return true, err
 	} else {
 		resp, err := client.R().
 			SetBody(gin.H{"id" : userId}).
 			SetContext(ctx).
 			EnableTrace().
-			Post("http://" + domain + ":8082/isPrivate")
+			Post("http://" + domain + ":8082/getPrivacyAndTagging?userId=" + userId)
 
 		if err != nil {
 			return false, err
@@ -90,12 +92,14 @@ func IsProfilePrivate(ctx context.Context, userId string) (bool, error) {
 			return false, fmt.Errorf("Err")
 		}
 
-		var privacyCheckResponseDto dto.PrivacyCheckResponseDto
+		var privacyCheckResponseDto dto.PrivacyTaggingDTO
 		if err := json.Unmarshal(resp.Body(), &privacyCheckResponseDto); err != nil {
 			return false, err
 		}
-
-		return privacyCheckResponseDto.IsPrivate, err
+		if privacyCheckResponseDto.PrivacyPermission == "Private" {
+			return false, err
+		}
+		return true, err
 	}
 
 }
