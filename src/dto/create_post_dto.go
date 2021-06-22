@@ -14,10 +14,11 @@ type CreatePostDTO struct {
 	Media []string
 	MediaType string
 	Video string `json:"video"`
+	MentionsToAdd []string
 
 }
 
 type UserTag struct {
-	UserId string `json:"user_id" validate:"required"`
+	UserId string `json:"userId" validate:"required"`
 	Username string `json:"username" validate:"required"`
 }
