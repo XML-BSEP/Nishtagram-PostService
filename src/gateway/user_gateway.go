@@ -69,12 +69,14 @@ func IsProfilePrivate(ctx context.Context, userId string) (bool, error) {
 			return false, fmt.Errorf("Err")
 		}
 
-		var privacyCheckResponseDto dto.PrivacyCheckResponseDto
+		var privacyCheckResponseDto dto.PrivacyTaggingDTO
 		if err := json.Unmarshal(resp.Body(), &privacyCheckResponseDto); err != nil {
 			return false, err
 		}
-
-		return privacyCheckResponseDto.IsPrivate, err
+		if privacyCheckResponseDto.PrivacyPermission == "Private" {
+			return false, err
+		}
+		return true, err
 	} else {
 		resp, err := client.R().
 			SetBody(gin.H{"id" : userId}).
@@ -90,12 +92,14 @@ func IsProfilePrivate(ctx context.Context, userId string) (bool, error) {
 			return false, fmt.Errorf("Err")
 		}
 
-		var privacyCheckResponseDto dto.PrivacyCheckResponseDto
+		var privacyCheckResponseDto dto.PrivacyTaggingDTO
 		if err := json.Unmarshal(resp.Body(), &privacyCheckResponseDto); err != nil {
 			return false, err
 		}
-
-		return privacyCheckResponseDto.IsPrivate, err
+		if privacyCheckResponseDto.PrivacyPermission == "Private" {
+			return false, err
+		}
+		return true, err
 	}
 
 }

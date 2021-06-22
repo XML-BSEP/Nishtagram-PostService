@@ -140,8 +140,11 @@ func (p postUseCase) GetPostsOnProfile(profileId string, userRequested string, c
 			}
 		}
 		if !isOkay {
-			p.logger.Logger.Errorf("user %v does not follow user %v\n", userRequested, profileId)
-			return nil, fmt.Errorf("oh no i hope i don't fall")
+			isPublicProfile, _ := gateway.IsProfilePrivate(ctx, profileId)
+			if !isPublicProfile {
+				p.logger.Logger.Errorf("user %v does not follow user %v\n", userRequested, profileId)
+				return nil, fmt.Errorf("oh no i hope i don't fall")
+			}
 		}
 	}
 
