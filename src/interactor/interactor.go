@@ -17,6 +17,7 @@ type Interactor interface {
 	NewCollectionRepo() repository.CollectionRepo
 	NewCommentRepo() repository.CommentRepo
 	NewReportRepo() repository.ReportRepo
+	NewMutedRepo() repository.MutedContentRepo
 
 	NewPostUseCase() usecase.PostUseCase
 	NewReportPostUseCase() usecase.PostReportUseCase
@@ -24,6 +25,7 @@ type Interactor interface {
 	NewCommentUseCase() usecase.CommentUseCase
 	NewFavoriteUseCase() usecase.FavoriteUseCase
 	NewCollectionUseCase() usecase.CollectionUseCase
+	NewMutedUseCase() usecase.MutedContentUseCase
 
 	NewAppHandler() handler.AppHandler
 	NewPostHandler() handler.PostHandler
@@ -32,6 +34,7 @@ type Interactor interface {
 	NewCommentHandler() handler.CommentHandler
 	NewFavoriteHandler() handler.FavoriteHandler
 	NewCollectionHandler() handler.CollectionHandler
+	NewMutedHandler() handler.MutedContentHandler
 
 
 }
@@ -42,8 +45,20 @@ type interactor struct {
 	notificationClient notification_service.NotificationClient
 }
 
+func (i interactor) NewMutedRepo() repository.MutedContentRepo {
+	return repository.NewMutedContentRepo(i.cassandraSession)
+}
+
+func (i interactor) NewMutedUseCase() usecase.MutedContentUseCase {
+	return usecase.NewMutedContentUseCase(i.NewMutedRepo())
+}
+
+func (i interactor) NewMutedHandler() handler.MutedContentHandler {
+	return handler.NewMuteContentHandler(i.NewMutedUseCase())
+}
+
 func (i interactor) NewPostUseCase() usecase.PostUseCase {
-	return usecase.NewPostUseCase(i.NewPostRepo(), i.NewLikeRepo(), i.NewFavoriteRepo(), i.NewCollectionRepo(), i.logger, i.notificationClient)
+	return usecase.NewPostUseCase(i.NewPostRepo(), i.NewLikeRepo(), i.NewFavoriteRepo(), i.NewCollectionRepo(), i.logger, i.notificationClient, i.NewMutedUseCase())
 }
 
 func (i interactor) NewReportPostUseCase() usecase.PostReportUseCase {
@@ -93,6 +108,7 @@ type appHandler struct {
 	handler.FavoriteHandler
 	handler.ReportPostHandler
 	handler.CollectionHandler
+	handler.MutedContentHandler
 }
 
 func (i interactor) NewAppHandler() handler.AppHandler {
@@ -103,6 +119,7 @@ func (i interactor) NewAppHandler() handler.AppHandler {
 	appHandler.CommentHandler = i.NewCommentHandler()
 	appHandler.CollectionHandler = i.NewCollectionHandler()
 	appHandler.FavoriteHandler = i.NewFavoriteHandler()
+	appHandler.MutedContentHandler = i.NewMutedHandler()
 
 	data_seeder.SeedData(i.cassandraSession)
 

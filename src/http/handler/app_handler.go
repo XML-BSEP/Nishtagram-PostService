@@ -7,4 +7,5 @@ type AppHandler interface {
 	FavoriteHandler
 	LikeHandler
 	ReportPostHandler
+	MutedContentHandler
 }
