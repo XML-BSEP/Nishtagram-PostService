@@ -59,7 +59,7 @@ func IsProfilePrivate(ctx context.Context, userId string) (bool, error) {
 			SetBody(gin.H{"id" : userId}).
 			SetContext(ctx).
 			EnableTrace().
-			Post("https://" + domain + ":8082/isPrivate")
+			Post("https://" + domain + ":8082/getPrivacyAndTagging?userId=" + userId)
 
 		if err != nil {
 			return false, err
@@ -82,7 +82,7 @@ func IsProfilePrivate(ctx context.Context, userId string) (bool, error) {
 			SetBody(gin.H{"id" : userId}).
 			SetContext(ctx).
 			EnableTrace().
-			Post("http://" + domain + ":8082/isPrivate")
+			Post("http://" + domain + ":8082/getPrivacyAndTagging?userId=" + userId)
 
 		if err != nil {
 			return false, err
