@@ -43,6 +43,7 @@ type postUseCase struct {
 	commentUseCase CommentUseCase
 	logger *logger.Logger
 	notificationClient notification_service.NotificationClient
+	mutedUseCase MutedContentUseCase
 }
 
 func (p postUseCase) GetAllLikedMedia(profileId string, ctx context.Context) ([]dto.PostInDTO, error) {
@@ -208,9 +209,11 @@ func (p postUseCase) GenerateUserFeed(userId string, userRequestedId string, ctx
 	inTimeRange := time.Now().Add(-72*time.Hour)
 	postsToShow := make(map[string][]string, len(userFollowing))
 	for _, user := range userFollowing {
-		posts := p.postRepository.GetPostsInDateTimeRange(user.Id, inTimeRange, context.Background())
-		if posts != nil {
-			postsToShow[user.Id] = append(postsToShow[user.Id], posts...)
+		if !p.mutedUseCase.SeeIfMuted(userRequestedId, user.Id, ctx) {
+			posts := p.postRepository.GetPostsInDateTimeRange(user.Id, inTimeRange, context.Background())
+			if posts != nil {
+				postsToShow[user.Id] = append(postsToShow[user.Id], posts...)
+			}
 		}
 	}
 
@@ -513,7 +516,7 @@ func (p postUseCase) GetPostByIdForSearch(profileId string, id string, ctx conte
 
 }
 
-func NewPostUseCase(postRepository repository.PostRepo, repo repository.LikeRepo, favoritesRepo repository.FavoritesRepo, collectionRepo repository.CollectionRepo, logger *logger.Logger, notificationClient notification_service.NotificationClient) PostUseCase {
+func NewPostUseCase(postRepository repository.PostRepo, repo repository.LikeRepo, favoritesRepo repository.FavoritesRepo, collectionRepo repository.CollectionRepo, logger *logger.Logger, notificationClient notification_service.NotificationClient, mutedUseCase MutedContentUseCase) PostUseCase {
 	return &postUseCase{
 		postRepository: postRepository,
 		likeRepository: repo,
@@ -521,5 +524,6 @@ func NewPostUseCase(postRepository repository.PostRepo, repo repository.LikeRepo
 		collectionRepository: collectionRepo,
 		logger: logger,
 		notificationClient: notificationClient,
+		mutedUseCase: mutedUseCase,
 	}
 }

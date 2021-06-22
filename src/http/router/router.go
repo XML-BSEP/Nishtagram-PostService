@@ -45,6 +45,9 @@ func NewRouter(handler handler.AppHandler, logger *logger.Logger) *gin.Engine{
 	g.GET("likedMedia", handler.GetLikedMedia)
 	g.GET("dislikedMedia", handler.GetDislikedMedia)
 	g.POST("getPostByIdForSearch", handler.GetPostByIdForSearch)
+	g.POST("mute", handler.MuteUser)
+	g.POST("unmute", handler.UnmuteUser)
+	g.POST("isMuted", handler.SeeIfMuted)
 
 	g.GET("getAllReportTypes", handler.GetAllReportTypes)
 
