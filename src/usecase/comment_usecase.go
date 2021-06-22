@@ -47,8 +47,8 @@ func (c commentUseCase) AddComment(comment dto.CommentDTO, ctx context.Context) 
 	notification := &pb.NotificationMessage{
 		Sender: comment.CommentBy.Id,
 		Receiver: comment.PostBy,
-		NotificationType: pb.NotificationType_Like,
-		RedirectPath: comment.PostId,
+		NotificationType: pb.NotificationType_Comment,
+		RedirectPath: "postDetails?postId="+comment.PostId+"&userId="+comment.PostBy,
 	}
 	_, _ = c.notificationClient.SendNotification(ctx, notification)
 	return err

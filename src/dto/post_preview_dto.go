@@ -47,6 +47,7 @@ func NewPostPreviewDTO(post PostDTO) PostPreviewDTO {
 		NumOfLikes: post.NumOfLikes,
 		Banned: post.Banned,
 		//Profile: post.Profile,
+		Timestamp:  post.Timestamp,
 		Type: post.MediaType.Type,
 		UserName: "",
 		UserUsername: "",

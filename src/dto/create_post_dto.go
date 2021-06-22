@@ -1,6 +1,7 @@
 package dto
 
 type CreatePostDTO struct {
+	ID string `json:"id"`
 	UserId UserTag `json:"user_id" validate:"required"`
 	Caption string `json:"caption" validate:"required"`
 	Location string `json:"location" validate:"required"`

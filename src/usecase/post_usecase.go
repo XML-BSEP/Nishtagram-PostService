@@ -376,8 +376,9 @@ func (p postUseCase) AddPost(postDTO dto.CreatePostDTO, ctx context.Context) err
 		postDTO.Media = media
 		postDTO.MediaType = "IMAGE"
 	}
-
-	in := &pb.MultipleNotificationsMessage{SenderId: postDTO.UserId.UserId, NotificationType: pb.NotificationType_Post, RedirectPath: ""}
+	postDTO.ID=uuid.NewString()
+	in := &pb.MultipleNotificationsMessage{SenderId: postDTO.UserId.UserId, NotificationType: pb.NotificationType_Post, RedirectPath: "postDetails?postId="+postDTO.ID+"&userId="+postDTO.UserId.UserId,
+	}
 	p.notificationClient.SendNotifications(ctx, in)
 
 

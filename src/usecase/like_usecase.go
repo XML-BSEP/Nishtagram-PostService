@@ -56,7 +56,8 @@ func (l likeUseCase) LikePost(dto dto.LikeDislikeDTO, ctx context.Context) error
 		Sender: dto.UserId,
 		Receiver: dto.PostBy,
 		NotificationType: pb.NotificationType_Like,
-		RedirectPath: dto.PostId,
+		RedirectPath: "postDetails?postId="+dto.PostId+"&userId="+dto.PostBy,
+
 	}
 	_, _ = l.notificationClient.SendNotification(ctx, notification)
 	return nil
@@ -81,7 +82,8 @@ func (l likeUseCase) DislikePost(dto dto.LikeDislikeDTO, ctx context.Context) er
 		Sender: dto.UserId,
 		Receiver: dto.PostBy,
 		NotificationType: pb.NotificationType_Dislike,
-		RedirectPath: dto.PostId,
+		RedirectPath: "postDetails?postId="+dto.PostId+"&userId="+dto.PostBy,
+
 	}
 	_, _ = l.notificationClient.SendNotification(ctx, notification)
 	return nil

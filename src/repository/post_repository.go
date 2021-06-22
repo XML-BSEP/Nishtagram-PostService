@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/gocql/gocql"
-	"github.com/google/uuid"
 	logger "github.com/jelena-vlajkov/logger/logger"
 	"post-service/dto"
 	"post-service/gateway"
@@ -132,21 +131,20 @@ func (p postRepository) GetPostsByUserId(userId string, ctx context.Context) ([]
 
 
 func (p postRepository) CreatePost(req dto.CreatePostDTO, ctx context.Context) error {
-	postId := uuid.NewString()
 
 	currentTime := time.Now()
 
-	err := p.cassandraSession.Query(InsertIntoPostTable, postId, req.UserId.UserId, req.Caption, currentTime, 0, 0, 0, false, req.Location,
+	err := p.cassandraSession.Query(InsertIntoPostTable, req.ID, req.UserId.UserId, req.Caption, currentTime, 0, 0, 0, false, req.Location,
 		0.0, 0.0, req.Mentions, req.Hashtags, req.Media, req.MediaType, false).Exec()
 
-	err = p.cassandraSession.Query(InsertIntoPostsTimestampTable, postId, req.UserId.UserId, currentTime).Exec()
+	err = p.cassandraSession.Query(InsertIntoPostsTimestampTable, req.ID, req.UserId.UserId, currentTime).Exec()
 
 	if err != nil {
 		p.logger.Logger.Errorf("error while saving post for user %v\n", req.UserId)
 		return fmt.Errorf("error while saving post")
 	}
 	if req.Location != "" {
-		postLocation := dto.PostLocationProfileDTO{PostId: postId, ProfileId: req.UserId.UserId, Location: req.Location}
+		postLocation := dto.PostLocationProfileDTO{PostId: req.ID, ProfileId: req.UserId.UserId, Location: req.Location}
 		err := gateway.SaveNewPostLocation(postLocation, ctx)
 		if err != nil {
 			p.logger.Logger.Errorf("error while sending request to save new locations")
@@ -154,7 +152,7 @@ func (p postRepository) CreatePost(req dto.CreatePostDTO, ctx context.Context) e
 	}
 
 	if len(req.Hashtags) > 0 {
-		postTag := dto.PostTagProfileDTO{PostId: postId, ProfileId: req.UserId.UserId, Hashtag: req.Hashtags}
+		postTag := dto.PostTagProfileDTO{PostId: req.ID, ProfileId: req.UserId.UserId, Hashtag: req.Hashtags}
 		err := gateway.SaveNewPostTage(postTag, ctx)
 
 		if err != nil {
