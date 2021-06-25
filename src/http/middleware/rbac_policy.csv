@@ -28,6 +28,7 @@ p, USER, /post/getAllCollections, *
 p, USER, /post/getPostsInCollection, *
 p, USER, /post/getFavorites, *
 p, ANONYMOUS, /post/getPostById, *
+p, ADMIN, /post/getPostById, *
 p, ANONYMOUS, /post/getPostsOnProfile, *
 p, ANONYMOUS, /post/getAllComments, *
 p, ANONYMOUS, /post/getPostsByUser, *
@@ -40,6 +41,7 @@ p, USER, /post/getAllReportTypes, *
 p, USER, /post/mute, *
 p, USER, /post/unmute, *
 p, USER, /post/isMuted, *
+p, ADMIN, /post/reviewReport, *
 
 
 

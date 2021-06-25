@@ -16,17 +16,17 @@ const (
 	InsertReportStatement = "INSERT INTO post_keyspace.Reports (id, post_id, timestamp, report_by, reported_post_by, type, status) VALUES (?, ?, ?, ?, ?, ?, ?) IF NOT EXISTS;"
 	GetAllRequestsByStatus = "SELECT  id, post_id, timestamp, report_by, reported_post_by, type, status FROM post_keyspace.Reports WHERE status = ?;"
 	DeleteReport = "DELETE FROM post_keyspace.Reports where status = ? and id = ?;"
-	GetPendingReportById = "SELECT id, post_id, reported_post_by, reported_by, type, timestamp FROM post_keyspace.Reports " +
-		"WHERE status = 'CREATED' AND id = ?;"
+	GetPendingReportById = "SELECT id, post_id, reported_post_by, report_by, type, timestamp FROM post_keyspace.Reports " +
+		"WHERE status = ? AND id = ?;"
 	SelectAllTypes = "SELECT * FROM post_keyspace.ReportType LIMIT 300000000;"
 )
 
 type ReportRepo interface {
 	ReportPost(report dto.CreateReportDTO, ctx context.Context) error
 	ReviewReport(report dto.ReviewReportDTO, ctx context.Context) error
-	GetAllPendingReports(ctx context.Context) ([]dto.ReportDTO, error)
-	GetAllApprovedReports(ctx context.Context) ([]dto.ReportDTO, error)
-	GetAllRejectedReports(ctx context.Context) ([]dto.ReportDTO, error)
+	GetAllPendingReports(ctx context.Context) (*[]dto.ReportDTO, error)
+	GetAllApprovedReports(ctx context.Context) (*[]dto.ReportDTO, error)
+	GetAllRejectedReports(ctx context.Context) (*[]dto.ReportDTO, error)
 	GetAllReportTypes(ctx context.Context) ([]string, error)
 }
 
@@ -57,7 +57,7 @@ func (r reportRepository) ReviewReport(report dto.ReviewReportDTO, ctx context.C
 	var reportId, postId, reportedPostBy, reportedBy, reportType string
 	var timestamp time.Time
 
-	iter := r.cassandraSession.Query(GetPendingReportById, report.ReportId).Iter()
+	iter := r.cassandraSession.Query(GetPendingReportById, "CREATED", report.ReportId).Iter()
 
 	if iter == nil {
 		return fmt.Errorf("no such element")
@@ -71,12 +71,9 @@ func (r reportRepository) ReviewReport(report dto.ReviewReportDTO, ctx context.C
 
 		updatedStatus := strings.ToUpper(report.Status)
 
-		r.cassandraSession.Query(DeleteReport, reportId).Exec()
-		var newUUID, err = uuid.NewUUID()
+		err := r.cassandraSession.Query(DeleteReport, "CREATED", reportId).Exec()
+		var newUUID = uuid.NewString()
 
-		if err != nil {
-			return err
-		}
 		err = r.cassandraSession.Query(InsertReportStatement, newUUID, postId, time.Now(), reportedBy, reportedPostBy, reportType, updatedStatus).Exec()
 
 		if err != nil {
@@ -90,7 +87,7 @@ func (r reportRepository) ReviewReport(report dto.ReviewReportDTO, ctx context.C
 
 }
 
-func (r reportRepository) GetAllPendingReports(ctx context.Context) ([]dto.ReportDTO, error) {
+func (r reportRepository) GetAllPendingReports(ctx context.Context) (*[]dto.ReportDTO, error) {
 	iter := r.cassandraSession.Query(GetAllRequestsByStatus, "CREATED").Iter().Scanner()
 
 	if iter == nil {
@@ -104,10 +101,10 @@ func (r reportRepository) GetAllPendingReports(ctx context.Context) ([]dto.Repor
 		iter.Scan(&reportId, &postId, &timestamp, &reportedBy, &reportedPostBy, &reportType, &status)
 		reports = append(reports, dto.NewReportDTO(reportId, postId, timestamp, reportedBy, reportedPostBy, reportType, status))
 	}
-	return reports, nil
+	return &reports, nil
 }
 
-func (r reportRepository) GetAllApprovedReports(ctx context.Context) ([]dto.ReportDTO, error) {
+func (r reportRepository) GetAllApprovedReports(ctx context.Context) (*[]dto.ReportDTO, error) {
 	iter := r.cassandraSession.Query(GetAllRequestsByStatus, "APPROVED").Iter().Scanner()
 
 	if iter == nil {
@@ -121,10 +118,10 @@ func (r reportRepository) GetAllApprovedReports(ctx context.Context) ([]dto.Repo
 		iter.Scan(&reportId, &postId, &timestamp, &reportedBy, &reportedPostBy, &reportType, &status)
 		reports = append(reports, dto.NewReportDTO(reportId, postId, timestamp, reportedBy, reportedPostBy, reportType, status))
 	}
-	return reports, nil
+	return &reports, nil
 }
 
-func (r reportRepository) GetAllRejectedReports(ctx context.Context) ([]dto.ReportDTO, error) {
+func (r reportRepository) GetAllRejectedReports(ctx context.Context) (*[]dto.ReportDTO, error) {
 	iter := r.cassandraSession.Query(GetAllRequestsByStatus, "REJECTED").Iter().Scanner()
 
 	if iter == nil {
@@ -138,7 +135,7 @@ func (r reportRepository) GetAllRejectedReports(ctx context.Context) ([]dto.Repo
 		iter.Scan(&reportId, &postId, &timestamp, &reportedBy, &reportedPostBy, &reportType, &status)
 		reports = append(reports, dto.NewReportDTO(reportId, postId, timestamp, reportedBy, reportedPostBy, reportType, status))
 	}
-	return reports, nil
+	return &reports, nil
 }
 
 func (r reportRepository) ReportPost(report dto.CreateReportDTO, ctx context.Context) error {
