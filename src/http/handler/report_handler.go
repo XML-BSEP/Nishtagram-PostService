@@ -64,6 +64,8 @@ func (r reportPostHandler) GetAllPendingReports(context *gin.Context) {
 
 	if err != nil {
 		context.JSON(500, "server error")
+		context.Abort()
+		return
 	}
 
 	context.JSON(200, reports)
@@ -75,6 +77,8 @@ func (r reportPostHandler) GetAllApprovedReports(context *gin.Context) {
 
 	if err != nil {
 		context.JSON(500, "server error")
+		context.Abort()
+		return
 	}
 
 	context.JSON(200, reports)
@@ -86,6 +90,8 @@ func (r reportPostHandler) GetAllRejectedReports(context *gin.Context) {
 
 	if err != nil {
 		context.JSON(500, "server error")
+		context.Abort()
+		return
 	}
 
 	context.JSON(200, reports)

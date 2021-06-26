@@ -7,12 +7,12 @@ import (
 
 type ReportDTO struct {
 	Id string `json:"id" validate:"required"`
-	PostId string `json:"post_id" validate:"required"`
+	PostId string `json:"postId" validate:"required"`
 	Timestamp time.Time `json:"timestamp" validate:"required"`
-	ReportBy domain.Profile `json:"reported_by" validate:"required"`
-	ReportType domain.MediaReportType `json:"report_type" validate:"required"`
-	ReportedPostBy domain.Profile `json:"reported_post_by" validate:"required"`
-	ReportStatus domain.ReportStatus `json:"report_status" validate:"required"`
+	ReportBy domain.Profile `json:"reportedBy" validate:"required"`
+	ReportType string `json:"reportType" validate:"required"`
+	ReportedPostBy domain.Profile `json:"reportedPostBy" validate:"required"`
+	ReportStatus string `json:"reportStatus" validate:"required"`
 }
 
 func NewReportDTO(id string, postId string, timestamp time.Time, reportedBy string,
@@ -23,7 +23,7 @@ func NewReportDTO(id string, postId string, timestamp time.Time, reportedBy stri
 		Timestamp: timestamp,
 		PostId: postId,
 		ReportedPostBy: domain.Profile{Id: reportedPostBy},
-		ReportType: domain.MediaReportType{ReportType: reportType},
-		ReportStatus: domain.ReportStatus{Status: reportStatus},
+		ReportType: reportType,
+		ReportStatus:reportStatus,
 	}
 }
