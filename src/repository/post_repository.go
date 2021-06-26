@@ -49,6 +49,7 @@ type PostRepo interface {
 	SeeIfPostDeletedOrBanned(userId string, postId string, ctx context.Context) bool
 	GetPostsInDateTimeRange(userId string, timeRange time.Time, ctx context.Context) []string
 	GetPostByIdForSearch(profileId string, id string, ctx context.Context) (dto.PostSearchDTO, string)
+	GetPostForAdmin(userId string, postId string, ctx context.Context) (dto.PostDTO, error)
 
 }
 
@@ -57,7 +58,29 @@ type postRepository struct {
 	logger *logger.Logger
 }
 
+func (p postRepository) GetPostForAdmin(userId string, postId string, ctx context.Context) (dto.PostDTO, error) {
+	var id, profileId, description, location, postType string
+	var numOfLikes, numOfDislikes, numOfComments int
+	var banned, deleted bool
+	var timestamp time.Time
 
+	iter := p.cassandraSession.Query(GetPostsForById, userId, postId).Iter()
+	var post dto.PostDTO
+
+	if iter == nil {
+		p.logger.Logger.Errorf("error while getting post %v by user %v\n", postId, userId)
+		return post, fmt.Errorf("no such element")
+	}
+
+	var hashtags, media, mentions []string
+	for iter.Scan(&id, &profileId, &description, &timestamp, &numOfLikes,
+		&numOfDislikes, &numOfComments, &banned, &location, &mentions, &hashtags, &media, &postType, &deleted) {
+		return dto.NewPost(id, description, timestamp, numOfLikes, numOfDislikes,
+			numOfComments, profileId, location, mentions, hashtags, media, postType), nil
+
+	}
+
+	return post, fmt.Errorf("no such element")}
 
 func (p postRepository) GetPostsInDateTimeRange(userId string, timeRange time.Time, ctx context.Context) []string {
 	var posts []string

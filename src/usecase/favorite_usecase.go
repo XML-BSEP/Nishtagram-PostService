@@ -36,7 +36,7 @@ func (f favoriteUseCase) GetFavoritesForUser(userId string, ctx context.Context)
 			bannedPosts = append(bannedPosts, favorite)
 			continue
 		}
-		post, err := f.postUseCase.GetPost( favorite, favorites[favorite], userId, context.Background())
+		post, err := f.postUseCase.GetPost( favorite, favorites[favorite], userId, false, context.Background())
 		if err != nil {
 			continue
 		}

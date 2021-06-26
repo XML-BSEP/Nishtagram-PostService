@@ -56,7 +56,7 @@ func (c collectionUseCase) GetCollection(userId string, collectionName string, c
 			continue
 		}
 		
-		post, err := c.postUseCase.GetPost(s, posts[s], userId, context.Background())
+		post, err := c.postUseCase.GetPost(s, posts[s], userId, false, context.Background())
 		post.PostBy = posts[s]
 		post.Id = s
 

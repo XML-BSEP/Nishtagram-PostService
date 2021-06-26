@@ -72,8 +72,14 @@ func (p postHandler) GetPostById(ctx *gin.Context) {
 		return
 	}
 	userRequested, _ := middleware.ExtractUserId(ctx.Request, p.logger)
-
-	post, err := p.postUseCase.GetPost(postDTO.PostId, postDTO.UserId, userRequested, context.Background())
+	role, _ := middleware.ExtractRole(ctx.Request, p.logger)
+	var isAdmin bool
+	if role == "ADMIN"{
+		isAdmin = true
+	} else {
+		isAdmin = false
+	}
+	post, err := p.postUseCase.GetPost(postDTO.PostId, postDTO.UserId, userRequested, isAdmin, context.Background())
 	if err != nil {
 		ctx.JSON(500, gin.H{"message":"server error"})
 		ctx.Abort()

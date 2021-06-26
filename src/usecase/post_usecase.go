@@ -24,7 +24,7 @@ type PostUseCase interface {
 	DeletePost(postDTO dto.DeletePostDTO, ctx context.Context) error
 	EditPost(postDTO dto.UpdatePostDTO, ctx context.Context) error
 	GetPostsByUser(userId string, userRequestedId string, ctx context.Context) ([]dto.PostDTO, error)
-	GetPost(postId string, userId string, userRequestedId string, ctx context.Context) (dto.PostPreviewDTO, error)
+	GetPost(postId string, userId string, userRequestedId string, isAdmin bool, ctx context.Context) (dto.PostPreviewDTO, error)
 	GetPostDTO(postId string, userId string, userRequestedId string, ctx context.Context) (dto.PostDTO, error)
 	GenerateUserFeed(userId string, userRequestedId string, ctx context.Context) ([]dto.PostPreviewDTO, error)
 	EncodeBase64(media string, userId string, ctx context.Context) (string, error)
@@ -427,9 +427,15 @@ func (p postUseCase) GetPostsByUser(userId string, userRequestedId string, ctx c
 	return retVal, nil
 }
 
-func (p postUseCase) GetPost(postId string, userId string, userRequestedId string, ctx context.Context) (dto.PostPreviewDTO, error) {
+func (p postUseCase) GetPost(postId string, userId string, userRequestedId string, isAdmin bool, ctx context.Context) (dto.PostPreviewDTO, error) {
 	p.logger.Logger.Infof("getting post with id %v by user %v\n", postId, userId)
-	post, err := p.postRepository.GetPostsById(userId, postId, context.Background())
+	var post dto.PostDTO
+	var err error
+	if !isAdmin {
+		post, err = p.postRepository.GetPostsById(userId, postId, context.Background())
+	} else {
+		post, err = p.postRepository.GetPostForAdmin(userId, postId, context.Background())
+	}
 	if err != nil {
 		return dto.PostPreviewDTO{}, err
 	}
