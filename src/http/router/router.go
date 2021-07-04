@@ -48,6 +48,7 @@ func NewRouter(handler handler.AppHandler, logger *logger.Logger) *gin.Engine{
 	g.POST("mute", handler.MuteUser)
 	g.POST("unmute", handler.UnmuteUser)
 	g.POST("isMuted", handler.SeeIfMuted)
+	g.POST("createPostFromCampaign", handler.AddPostFromCampaign)
 
 	g.GET("getAllReportTypes", handler.GetAllReportTypes)
 
