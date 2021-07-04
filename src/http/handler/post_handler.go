@@ -24,12 +24,68 @@ type PostHandler interface {
 	GetLikedMedia(ctx *gin.Context)
 	GetDislikedMedia(ctx *gin.Context)
 	GetPostByIdForSearch(ctx *gin.Context)
+	AddPostFromCampaign(ctx *gin.Context)
 
 }
 
 type postHandler struct {
 	postUseCase usecase.PostUseCase
 	logger *logger.Logger
+}
+
+func (p postHandler) AddPostFromCampaign(context *gin.Context) {
+	p.logger.Logger.Println("Handling ADDING POST")
+	var createPostDTO dto.CreatePostDTO
+
+	decoder := json.NewDecoder(context.Request.Body)
+	if err := decoder.Decode(&createPostDTO); err != nil {
+		p.logger.Logger.Errorf("error while decoding json, error: %v\n", err)
+		context.JSON(400, "invalid request")
+		context.Abort()
+		return
+	}
+
+	policy := bluemonday.UGCPolicy()
+
+	createPostDTO.Location =  strings.TrimSpace(policy.Sanitize(createPostDTO.Location))
+	createPostDTO.Caption =  strings.TrimSpace(policy.Sanitize(createPostDTO.Caption))
+	for i,_ := range createPostDTO.Hashtags{
+		createPostDTO.Hashtags[i] =  strings.TrimSpace(policy.Sanitize(createPostDTO.Hashtags[i]))
+		if createPostDTO.Hashtags[i] == "" {
+			p.logger.Logger.Errorf("fields are empty or xss attack happened")
+			context.JSON(400, gin.H{"message" : "Fields are empty or xss attack happened"})
+			return
+		}
+	}
+	for i,_ := range createPostDTO.Album{
+		createPostDTO.Album[i] =  strings.TrimSpace(policy.Sanitize(createPostDTO.Album[i]))
+		if createPostDTO.Album[i] == "" {
+			p.logger.Logger.Errorf("fields are empty or xss attack happened")
+			context.JSON(400, gin.H{"message" : "Fields are empty or xss attack happened"})
+			return
+		}
+	}
+
+	createPostDTO.Image =  strings.TrimSpace(policy.Sanitize(createPostDTO.Image))
+	createPostDTO.Video =  strings.TrimSpace(policy.Sanitize(createPostDTO.Video))
+
+	if createPostDTO.Location == "" || createPostDTO.Caption == ""  {
+		p.logger.Logger.Errorf("error while verifying and validating createPostDTO fields\n")
+		p.logger.Logger.Warnf("possible xss attack from IP address: %v\n", context.Request.Referer())
+		context.JSON(400, gin.H{"message" : "Fields are empty or xss attack happened"})
+		return
+	}
+
+
+	err := p.postUseCase.AddPost(createPostDTO, context)
+
+	if err != nil {
+		context.JSON(500, "server error")
+		context.Abort()
+		return
+	}
+
+	context.JSON(200, "ok")
 }
 
 func (p postHandler) GetLikedMedia(ctx *gin.Context) {

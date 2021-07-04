@@ -42,6 +42,7 @@ p, USER, /post/mute, *
 p, USER, /post/unmute, *
 p, USER, /post/isMuted, *
 p, ADMIN, /post/reviewReport, *
+p, ANONYMOUS /post/createPostFromCampaign, *
 
 
 
