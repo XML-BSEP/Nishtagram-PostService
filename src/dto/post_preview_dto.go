@@ -27,6 +27,8 @@ type PostPreviewDTO struct {
 	IsBookmarked bool `json:"isBookmarked" validate:"required"`
 	IsDisliked bool `json:"isDisliked" validate:"required"`
 	IsLiked bool `json:"isLiked" validate:"required"`
+	IsCampaign bool `json:"isCampaign"`
+	Link string `json:"link"`
 
 }
 
