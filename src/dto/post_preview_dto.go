@@ -28,6 +28,7 @@ type PostPreviewDTO struct {
 	IsDisliked bool `json:"isDisliked" validate:"required"`
 	IsLiked bool `json:"isLiked" validate:"required"`
 	IsCampaign bool `json:"isCampaign"`
+	CampaignId string `json:"campaignId"`
 	Link string `json:"link"`
 
 }
@@ -37,6 +38,7 @@ func NewPostPreviewDTO(post PostDTO) PostPreviewDTO {
 		Id : post.Id,
 		Media: post.Media,
 		User: post.Profile,
+		Link: post.Link,
 		Location: post.Location,
 		Description: post.Description,
 		IsAlbum: post.IsAlbum,
@@ -51,6 +53,8 @@ func NewPostPreviewDTO(post PostDTO) PostPreviewDTO {
 		//Profile: post.Profile,
 		Type: post.MediaType.Type,
 		UserName: "",
+		IsCampaign: post.IsCampaign,
+		CampaignId: post.CampaignId,
 		UserUsername: "",
 		UserSurname: "",
 	}

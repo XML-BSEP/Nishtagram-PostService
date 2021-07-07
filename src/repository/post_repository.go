@@ -13,10 +13,10 @@ import (
 
 const (
  	CreatePostTable = "CREATE TABLE if not exists post_keyspace.Posts (id text, profile_id text, description text, timestamp timestamp, num_of_likes int, num_of_dislikes int, num_of_comments int, banned boolean, location_name text, location_lat double," +
- 		"location_long double, mentions list<text>, hashtags list<text>, media list<text>, type text, deleted boolean, PRIMARY KEY (profile_id, id));"
+ 		"location_long double, mentions list<text>, hashtags list<text>, media list<text>, type text, deleted boolean, is_campaign boolean, campaign_id text, link text, PRIMARY KEY (profile_id, id));"
 	CreatePostsTimestampTable = "CREATE TABLE if not exists post_keyspace.PostsTimestamp (post_id text, profile_id text, timestamp timestamp, PRIMARY KEY (profile_id, timestamp)) WITH CLUSTERING ORDER BY (timestamp ASC);"
  	InsertIntoPostTable = "INSERT INTO post_keyspace.Posts (id, profile_id, description, timestamp, num_of_likes, " +
- 		"num_of_dislikes, num_of_comments, banned, location_name, location_lat, location_long, mentions, hashtags, media, type, deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) IF NOT EXISTS;"
+ 		"num_of_dislikes, num_of_comments, banned, location_name, location_lat, location_long, mentions, hashtags, media, type, deleted, is_campaign, campaign_id, link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) IF NOT EXISTS;"
 	InsertIntoPostsTimestampTable = "INSERT INTO post_keyspace.PostsTimestamp (post_id, profile_id, timestamp) VALUES (?, ?, ?);"
 	GetPostsInLastThreeDays = "SELECT post_id from post_keyspace.PostsTimestamp WHERE profile_id = ? AND timestamp >= ?;"
  	AddLikeToPost = "UPDATE post_keyspace.Posts SET num_of_likes = ? WHERE id = ? and profile_id = ?;"
@@ -30,9 +30,9 @@ const (
 	GetNumOfCommentsForPost = "SELECT num_of_comments FROM post_keyspace.Posts WHERE id = ? AND profile_id = ?;"
 	GetPrimaryKeysById = "SELECT id, profile_id, timestamp FROM post_keyspace.Posts where id = ?;"
 	GetPostsByUserId = "SELECT id, profile_id, description, timestamp, num_of_likes, num_of_dislikes, num_of_comments, banned, location_name, mentions, " +
-		"hashtags, media, type, deleted FROM post_keyspace.Posts where profile_id = ?;"
+		"hashtags, media, type, deleted, is_campaign, campaign_id, link FROM post_keyspace.Posts where profile_id = ?;"
 	GetPostsForById = "SELECT id, profile_id, description, timestamp, num_of_likes, num_of_dislikes, num_of_comments, banned, location_name, mentions, " +
-		"hashtags, media, type, deleted  FROM post_keyspace.Posts where profile_id = ? and id = ?;"
+		"hashtags, media, type, deleted, is_campaign, campaign_id, link  FROM post_keyspace.Posts where profile_id = ? and id = ?;"
 	UpdatePost        = "UPDATE post_keyspace.Posts SET description = ?, mentions = ?, hashtags = ?, location_name = ?, location_lat = ?, location_long = ? WHERE profile_id = ? and id = ?;"
 	DeletePost        = "UPDATE post_keyspace.Posts SET deleted = true WHERE profile_id = ? AND id = ?;"
 	IfDeletedOrBanned = "SELECT banned, deleted FROM post_keyspace.Posts WHERE profile_id = ? AND id = ?;"
@@ -59,9 +59,9 @@ type postRepository struct {
 }
 
 func (p postRepository) GetPostForAdmin(userId string, postId string, ctx context.Context) (dto.PostDTO, error) {
-	var id, profileId, description, location, postType string
+	var id, profileId, description, campaignId, location, postType, link string
 	var numOfLikes, numOfDislikes, numOfComments int
-	var banned, deleted bool
+	var banned, deleted, isCampaign bool
 	var timestamp time.Time
 
 	iter := p.cassandraSession.Query(GetPostsForById, userId, postId).Iter()
@@ -74,9 +74,9 @@ func (p postRepository) GetPostForAdmin(userId string, postId string, ctx contex
 
 	var hashtags, media, mentions []string
 	for iter.Scan(&id, &profileId, &description, &timestamp, &numOfLikes,
-		&numOfDislikes, &numOfComments, &banned, &location, &mentions, &hashtags, &media, &postType, &deleted) {
+		&numOfDislikes, &numOfComments, &banned, &location, &mentions, &hashtags, &media, &postType, &deleted, &isCampaign, &campaignId, &link) {
 		return dto.NewPost(id, description, timestamp, numOfLikes, numOfDislikes,
-			numOfComments, profileId, location, mentions, hashtags, media, postType), nil
+			numOfComments, profileId, location, mentions, hashtags, media, postType, isCampaign, campaignId, link), nil
 
 	}
 
@@ -100,9 +100,9 @@ func (p postRepository) SeeIfPostDeletedOrBanned(postId string, userId string, c
 }
 
 func (p postRepository) GetPostsById(userId string, postId string, ctx context.Context) (dto.PostDTO, error) {
-	var id, profileId, description, location, postType string
+	var id, profileId, description, campaignId, location, postType, link string
 	var numOfLikes, numOfDislikes, numOfComments int
-	var banned, deleted bool
+	var banned, deleted, isCampaign bool
 	var timestamp time.Time
 
 	iter := p.cassandraSession.Query(GetPostsForById, userId, postId).Iter()
@@ -115,10 +115,10 @@ func (p postRepository) GetPostsById(userId string, postId string, ctx context.C
 
 	var hashtags, media, mentions []string
 	for iter.Scan(&id, &profileId, &description, &timestamp, &numOfLikes,
-		&numOfDislikes, &numOfComments, &banned, &location, &mentions, &hashtags, &media, &postType, &deleted) {
+		&numOfDislikes, &numOfComments, &banned, &location, &mentions, &hashtags, &media, &postType, &deleted, &isCampaign, &campaignId, &link) {
 		if !deleted && !banned {
 			return dto.NewPost(id, description, timestamp, numOfLikes, numOfDislikes,
-				numOfComments, profileId, location, mentions, hashtags, media, postType), nil
+				numOfComments, profileId, location, mentions, hashtags, media, postType, isCampaign, campaignId, link), nil
 		}
 	}
 
@@ -127,9 +127,9 @@ func (p postRepository) GetPostsById(userId string, postId string, ctx context.C
 
 func (p postRepository) GetPostsByUserId(userId string, ctx context.Context) ([]dto.PostDTO, error) {
 
-	var id, profileId, description, location, postType string
+	var id, profileId, description, location, postType, campaignId, link string
 	var numOfLikes, numOfDislikes, numOfComments int
-	var banned, deleted bool
+	var banned, deleted, isCampaign bool
 	var timestamp time.Time
 
 
@@ -143,10 +143,10 @@ func (p postRepository) GetPostsByUserId(userId string, ctx context.Context) ([]
 	for iter.Next() {
 		var hashtags, media, mentions []string
 		iter.Scan(&id, &profileId, &description, &timestamp, &numOfLikes,
-			&numOfDislikes, &numOfComments, &banned, &location, &mentions, &hashtags, &media, &postType, &deleted)
+			&numOfDislikes, &numOfComments, &banned, &location, &mentions, &hashtags, &media, &postType, &deleted, &isCampaign, &campaignId, &link)
 		if !deleted && !banned {
 			posts = append(posts, dto.NewPost(id, description, timestamp, numOfLikes, numOfDislikes,
-				numOfComments, profileId, location, mentions, hashtags, media, postType))
+				numOfComments, profileId, location, mentions, hashtags, media, postType, isCampaign, campaignId, link))
 		}
 	}
 
@@ -160,7 +160,7 @@ func (p postRepository) CreatePost(req dto.CreatePostDTO, ctx context.Context) e
 	currentTime := time.Now()
 
 	err := p.cassandraSession.Query(InsertIntoPostTable, postId, req.UserId.UserId, req.Caption, currentTime, 0, 0, 0, false, req.Location,
-		0.0, 0.0, req.MentionsToAdd, req.Hashtags, req.Media, req.MediaType, false).Exec()
+		0.0, 0.0, req.MentionsToAdd, req.Hashtags, req.Media, req.MediaType, false, req.IsCampaign, req.CampaignId, req.Link).Exec()
 
 	err = p.cassandraSession.Query(InsertIntoPostsTimestampTable, postId, req.UserId.UserId, currentTime).Exec()
 

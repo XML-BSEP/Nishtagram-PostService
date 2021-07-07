@@ -24,11 +24,15 @@ type PostDTO struct {
 	Hashtags []string
 	Mentions []string
 	IsLiked bool `json:"isLiked" validate:"required"`
+	IsCampaign bool `json:"isCampaign"`
+	CampaignId string `json:"campaignId"`
+	Link string `json:"link"`
 
 }
 
 func NewPost(id string, desc string, timestamp time.Time, numOfLikes int, numOfDislikes int,
-	numOfComments int, profileId string, locationName string, mentions []string, hashtags []string, media []string, mediaType string) PostDTO {
+	numOfComments int, profileId string, locationName string, mentions []string, hashtags []string, media []string,
+	mediaType string, isCampaign bool, campaignId string, link string) PostDTO {
 
 	var mentionsSlice []domain.Profile
 	var hashtagsSlice []domain.Hashtag
@@ -43,9 +47,12 @@ func NewPost(id string, desc string, timestamp time.Time, numOfLikes int, numOfD
 
 	return PostDTO{
 		Id: id,
+		IsCampaign:  isCampaign,
+		CampaignId: campaignId,
 		Description: desc,
 		Hashtags: hashtags,
 		Mentions: mentions,
+		Link: link,
 		Timestamp: timestamp,
 		NumOfLikes: numOfLikes,
 		NumOfDislikes: numOfDislikes,
