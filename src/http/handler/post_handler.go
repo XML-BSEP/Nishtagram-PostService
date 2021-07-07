@@ -75,7 +75,7 @@ func (p postHandler) AddPostFromCampaign(context *gin.Context) {
 		context.JSON(400, gin.H{"message" : "Fields are empty or xss attack happened"})
 		return
 	}
-
+	createPostDTO.IsCampaign = true
 
 	err := p.postUseCase.AddPost(createPostDTO, context)
 
@@ -303,6 +303,7 @@ func (p postHandler) AddPost(context *gin.Context) {
 	createPostDTO.Image =  strings.TrimSpace(policy.Sanitize(createPostDTO.Image))
 	createPostDTO.Video =  strings.TrimSpace(policy.Sanitize(createPostDTO.Video))
 
+	createPostDTO.IsCampaign = false
 	if createPostDTO.Location == "" || createPostDTO.Caption == ""  {
 		p.logger.Logger.Errorf("error while verifying and validating createPostDTO fields\n")
 		p.logger.Logger.Warnf("possible xss attack from IP address: %v\n", context.Request.Referer())
