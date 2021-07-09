@@ -5,10 +5,14 @@ import (
 	logger "github.com/jelena-vlajkov/logger/logger"
 	"post-service/http/handler"
 	"post-service/http/middleware"
+	"post-service/http/middleware/prometheus_middleware"
 )
 
 func NewRouter(handler handler.AppHandler, logger *logger.Logger) *gin.Engine{
 	router := gin.Default()
+	requestCounter := prometheus_middleware.GetHttpRequestsCounter()
+	router.Use(prometheus_middleware.PrometheusMiddleware(requestCounter))
+	router.GET("/metrics", prometheus_middleware.PrometheusGinHandler())
 
 	g := router.Group("/post")
 

@@ -75,7 +75,7 @@ p, USER, /post/isMuted, *
 p, AGENT, /post/isMuted, *
 p, ADMIN, /post/reviewReport, *
 p, ANONYMOUS, /post/createPostFromCampaign, *
-
+p, ANONYMOUS, /metrics, *
 
 
 
