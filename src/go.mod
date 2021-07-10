@@ -19,12 +19,12 @@ require (
 	github.com/jelena-vlajkov/logger/logger v1.0.0
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.10
-	github.com/prometheus/client_golang v1.11.0 // indirect
+	github.com/prometheus/client_golang v1.11.0
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.29.0 // indirect
 	github.com/spf13/viper v1.7.1
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
-	google.golang.org/grpc v1.38.0 // indirect
-	google.golang.org/protobuf v1.26.0 // indirect
+	google.golang.org/grpc v1.38.0
+	google.golang.org/protobuf v1.26.0
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
