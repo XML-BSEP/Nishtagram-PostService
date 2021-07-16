@@ -1,0 +1,65 @@
+package dto
+
+import (
+	"post-service/domain"
+	"time"
+)
+
+type PostDTO struct {
+	Id string `json:"id" validate:"required"`
+	Description string `json:"description" validate:"required"`
+	Timestamp time.Time `json:"time" validate:"required"`
+	NumOfLikes int `json:"numOfLikes" validate:"required"`
+	NumOfDislikes int `json:"numOfDislikes" validate:"required"`
+	NumOfComments int `json:"numOfComments" validate:"required"`
+	Banned bool
+	Profile domain.Profile `json:"user" validate:"required"`
+	Location string `json:"location" validate:"required"`
+	IsBookmarked bool `json:"isBookmarked" validate:"required"`
+	IsDisliked bool `json:"isDisliked" validate:"required"`
+	IsVideo bool `json:"isVideo" validate:"required"`
+	IsAlbum bool `json:"isAlbum" validate:"required"`
+	Media []string
+	MediaType domain.MediaType
+	Hashtags []string
+	Mentions []string
+	IsLiked bool `json:"isLiked" validate:"required"`
+	IsCampaign bool `json:"isCampaign"`
+	CampaignId string `json:"campaignId"`
+	Link string `json:"link"`
+
+}
+
+func NewPost(id string, desc string, timestamp time.Time, numOfLikes int, numOfDislikes int,
+	numOfComments int, profileId string, locationName string, mentions []string, hashtags []string, media []string,
+	mediaType string, isCampaign bool, campaignId string, link string) PostDTO {
+
+	var mentionsSlice []domain.Profile
+	var hashtagsSlice []domain.Hashtag
+
+	for _, s := range mentions {
+		mentionsSlice = append(mentionsSlice, domain.Profile{Id: s})
+	}
+
+	for _, s := range hashtags {
+		hashtagsSlice = append(hashtagsSlice, domain.Hashtag{Tag: s})
+	}
+
+	return PostDTO{
+		Id: id,
+		IsCampaign:  isCampaign,
+		CampaignId: campaignId,
+		Description: desc,
+		Hashtags: hashtags,
+		Mentions: mentions,
+		Link: link,
+		Timestamp: timestamp,
+		NumOfLikes: numOfLikes,
+		NumOfDislikes: numOfDislikes,
+		NumOfComments: numOfComments,
+		Profile: domain.Profile{Id: profileId},
+		Location: locationName,
+		MediaType: domain.MediaType{Type: mediaType},
+		Media: media,
+	}
+}

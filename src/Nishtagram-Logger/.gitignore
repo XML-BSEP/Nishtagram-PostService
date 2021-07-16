@@ -26,5 +26,3 @@
 ### Go Patch ###
 /vendor/
 /Godeps/
-
-logfiles/*
